@@ -1,0 +1,10 @@
+.inquest/
+.venv/
+__pycache__/
+*.pyc
+.env
+node_modules/
+ui/dist/
+.pytest_cache/
+eval/pools/
+corpus/*/paper.pdf
