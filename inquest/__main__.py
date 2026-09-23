@@ -24,6 +24,11 @@ def _print_verdicts(result: dict) -> None:
 
 
 def main(argv: list[str] | None = None) -> int:
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(encoding="utf-8")
+        except AttributeError:
+            pass
     ap = argparse.ArgumentParser(prog="inquest", description="Forensic reproducibility for ML papers")
     sub = ap.add_subparsers(dest="cmd", required=True)
 
