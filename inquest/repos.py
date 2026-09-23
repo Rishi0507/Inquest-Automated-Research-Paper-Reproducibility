@@ -5,6 +5,8 @@ import hashlib
 import json
 import shutil
 import subprocess
+import threading
+import uuid
 from pathlib import Path
 
 from . import config
@@ -91,11 +93,27 @@ def worktree(paper_id: str, base: Path, edits: list[dict]) -> Path:
     h = code_patch_hash(edits)
     dest = config.WORKTREES / paper_id / h
     marker = dest / ".inquest_patch.json"
-    if marker.exists():
-        return dest
-    if dest.exists():
-        shutil.rmtree(dest)
-    shutil.copytree(base, dest, ignore=shutil.ignore_patterns(".git"))
-    apply_edits(dest, edits)
-    marker.write_text(json.dumps(edits, indent=1), encoding="utf-8")
+    with _lock_for(str(dest)):
+        if marker.exists():
+            return dest
+        if dest.exists():
+            shutil.rmtree(dest)
+        staging = dest.with_name(f"{h}.staging-{uuid.uuid4().hex[:6]}")
+        shutil.copytree(base, staging, ignore=shutil.ignore_patterns(".git"))
+        try:
+            apply_edits(staging, edits)
+        except Exception:
+            shutil.rmtree(staging, ignore_errors=True)
+            raise
+        (staging / ".inquest_patch.json").write_text(json.dumps(edits, indent=1), encoding="utf-8")
+        staging.rename(dest)
     return dest
+
+
+_locks: dict[str, threading.Lock] = {}
+_locks_guard = threading.Lock()
+
+
+def _lock_for(key: str) -> threading.Lock:
+    with _locks_guard:
+        return _locks.setdefault(key, threading.Lock())
