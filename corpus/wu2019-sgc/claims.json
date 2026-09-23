@@ -1,0 +1,486 @@
+[
+ {
+  "claim_id": "C-01",
+  "text": "SGC reaches 81.0% test accuracy on Cora, averaged over 10 runs (Table 2)",
+  "metric": "accuracy",
+  "value": 81.0,
+  "value_text": "81.0",
+  "decimals": 1,
+  "dataset": "Cora",
+  "model": "SGC",
+  "n_test": 1000,
+  "n_seeds_reported": 10,
+  "dispersion": 0.0,
+  "dispersion_kind": "std",
+  "stated_config": {
+   "epochs": {
+    "value": 100,
+    "span": {
+     "page": 6,
+     "bbox": [
+      126.3508529663086,
+      167.0577850341797,
+      133.80950927734375,
+      173.7975616455078
+     ],
+     "table": null,
+     "section": "5.1",
+     "text": "100"
+    }
+   },
+   "optimizer": {
+    "value": "Adam",
+    "span": {
+     "page": 6,
+     "bbox": [
+      227.07081604003906,
+      562.3935546875,
+      251.4680938720703,
+      574.3984985351562
+     ],
+     "table": null,
+     "section": "5.1",
+     "text": "Adam"
+    }
+   },
+   "lr": {
+    "value": 0.2,
+    "span": {
+     "page": 6,
+     "bbox": [
+      187.85726928710938,
+      574.3485717773438,
+      203.10006713867188,
+      586.353515625
+     ],
+     "table": null,
+     "section": "5.1",
+     "text": "0.2."
+    }
+   },
+   "weight_decay.tuning": {
+    "value": "hyperopt, 60 iterations",
+    "span": {
+     "page": 6,
+     "bbox": [
+      80.21459197998047,
+      598.258544921875,
+      116.2891616821289,
+      610.2634887695312
+     ],
+     "table": null,
+     "section": "5.1",
+     "text": "hyperopt"
+    }
+   },
+   "split": {
+    "value": "public",
+    "span": {
+     "page": 6,
+     "bbox": [
+      70.21134948730469,
+      610.2135620117188,
+      95.3669204711914,
+      622.218505859375
+     ],
+     "table": null,
+     "section": "5.1",
+     "text": "public"
+    }
+   },
+   "epochs.tuning": {
+    "value": "tuned",
+    "span": {
+     "page": 6,
+     "bbox": [
+      172.74595642089844,
+      562.3935546875,
+      200.4674072265625,
+      574.3984985351562
+     ],
+     "table": null,
+     "section": "5.1",
+     "text": "epochs"
+    }
+   }
+  },
+  "procedures": [
+   "public Planetoid split",
+   "weight decay tuned with hyperopt for 60 iterations on the validation set",
+   "averaged over 10 runs",
+   "number of epochs tuned on convergence and validation accuracy"
+  ],
+  "required_params": [
+   "epochs",
+   "optimizer",
+   "lr",
+   "weight_decay",
+   "degree",
+   "split",
+   "seed"
+  ],
+  "source": {
+   "page": 6,
+   "bbox": [
+    374.2120056152344,
+    472.01226806640625,
+    413.6347351074219,
+    481.0948486328125
+   ],
+   "table": "Table 2",
+   "section": "5.1",
+   "text": "81.0 ± 0.0"
+  },
+  "origin": "hand"
+ },
+ {
+  "claim_id": "C-02",
+  "text": "SGC reaches 71.9% test accuracy on Citeseer, averaged over 10 runs (Table 2)",
+  "metric": "accuracy",
+  "value": 71.9,
+  "value_text": "71.9",
+  "decimals": 1,
+  "dataset": "Citeseer",
+  "model": "SGC",
+  "n_test": 1000,
+  "n_seeds_reported": 10,
+  "dispersion": 0.1,
+  "dispersion_kind": "std",
+  "stated_config": {
+   "epochs": {
+    "value": 100,
+    "span": {
+     "page": 6,
+     "bbox": [
+      126.3508529663086,
+      167.0577850341797,
+      133.80950927734375,
+      173.7975616455078
+     ],
+     "table": null,
+     "section": "5.1",
+     "text": "100"
+    }
+   },
+   "optimizer": {
+    "value": "Adam",
+    "span": {
+     "page": 6,
+     "bbox": [
+      227.07081604003906,
+      562.3935546875,
+      251.4680938720703,
+      574.3984985351562
+     ],
+     "table": null,
+     "section": "5.1",
+     "text": "Adam"
+    }
+   },
+   "lr": {
+    "value": 0.2,
+    "span": {
+     "page": 6,
+     "bbox": [
+      187.85726928710938,
+      574.3485717773438,
+      203.10006713867188,
+      586.353515625
+     ],
+     "table": null,
+     "section": "5.1",
+     "text": "0.2."
+    }
+   },
+   "weight_decay.tuning": {
+    "value": "hyperopt, 60 iterations",
+    "span": {
+     "page": 6,
+     "bbox": [
+      80.21459197998047,
+      598.258544921875,
+      116.2891616821289,
+      610.2634887695312
+     ],
+     "table": null,
+     "section": "5.1",
+     "text": "hyperopt"
+    }
+   },
+   "split": {
+    "value": "public",
+    "span": {
+     "page": 6,
+     "bbox": [
+      70.21134948730469,
+      610.2135620117188,
+      95.3669204711914,
+      622.218505859375
+     ],
+     "table": null,
+     "section": "5.1",
+     "text": "public"
+    }
+   },
+   "epochs.tuning": {
+    "value": "tuned",
+    "span": {
+     "page": 6,
+     "bbox": [
+      172.74595642089844,
+      562.3935546875,
+      200.4674072265625,
+      574.3984985351562
+     ],
+     "table": null,
+     "section": "5.1",
+     "text": "epochs"
+    }
+   }
+  },
+  "procedures": [
+   "public Planetoid split",
+   "weight decay tuned with hyperopt for 60 iterations on the validation set",
+   "averaged over 10 runs",
+   "number of epochs tuned on convergence and validation accuracy"
+  ],
+  "required_params": [
+   "epochs",
+   "optimizer",
+   "lr",
+   "weight_decay",
+   "degree",
+   "split",
+   "seed"
+  ],
+  "source": {
+   "page": 6,
+   "bbox": [
+    429.5190124511719,
+    472.01226806640625,
+    468.94073486328125,
+    481.0948486328125
+   ],
+   "table": "Table 2",
+   "section": "5.1",
+   "text": "71.9 ± 0.1"
+  },
+  "origin": "hand"
+ },
+ {
+  "claim_id": "C-03",
+  "text": "SGC reaches 78.9% test accuracy on Pubmed, averaged over 10 runs (Table 2)",
+  "metric": "accuracy",
+  "value": 78.9,
+  "value_text": "78.9",
+  "decimals": 1,
+  "dataset": "Pubmed",
+  "model": "SGC",
+  "n_test": 1000,
+  "n_seeds_reported": 10,
+  "dispersion": 0.0,
+  "dispersion_kind": "std",
+  "stated_config": {
+   "epochs": {
+    "value": 100,
+    "span": {
+     "page": 6,
+     "bbox": [
+      126.3508529663086,
+      167.0577850341797,
+      133.80950927734375,
+      173.7975616455078
+     ],
+     "table": null,
+     "section": "5.1",
+     "text": "100"
+    }
+   },
+   "optimizer": {
+    "value": "Adam",
+    "span": {
+     "page": 6,
+     "bbox": [
+      227.07081604003906,
+      562.3935546875,
+      251.4680938720703,
+      574.3984985351562
+     ],
+     "table": null,
+     "section": "5.1",
+     "text": "Adam"
+    }
+   },
+   "lr": {
+    "value": 0.2,
+    "span": {
+     "page": 6,
+     "bbox": [
+      187.85726928710938,
+      574.3485717773438,
+      203.10006713867188,
+      586.353515625
+     ],
+     "table": null,
+     "section": "5.1",
+     "text": "0.2."
+    }
+   },
+   "weight_decay.tuning": {
+    "value": "hyperopt, 60 iterations",
+    "span": {
+     "page": 6,
+     "bbox": [
+      80.21459197998047,
+      598.258544921875,
+      116.2891616821289,
+      610.2634887695312
+     ],
+     "table": null,
+     "section": "5.1",
+     "text": "hyperopt"
+    }
+   },
+   "split": {
+    "value": "public",
+    "span": {
+     "page": 6,
+     "bbox": [
+      70.21134948730469,
+      610.2135620117188,
+      95.3669204711914,
+      622.218505859375
+     ],
+     "table": null,
+     "section": "5.1",
+     "text": "public"
+    }
+   },
+   "epochs.tuning": {
+    "value": "tuned",
+    "span": {
+     "page": 6,
+     "bbox": [
+      172.74595642089844,
+      562.3935546875,
+      200.4674072265625,
+      574.3984985351562
+     ],
+     "table": null,
+     "section": "5.1",
+     "text": "epochs"
+    }
+   }
+  },
+  "procedures": [
+   "public Planetoid split",
+   "weight decay tuned with hyperopt for 60 iterations on the validation set",
+   "averaged over 10 runs",
+   "number of epochs tuned on convergence and validation accuracy"
+  ],
+  "required_params": [
+   "epochs",
+   "optimizer",
+   "lr",
+   "weight_decay",
+   "degree",
+   "split",
+   "seed"
+  ],
+  "source": {
+   "page": 6,
+   "bbox": [
+    484.82501220703125,
+    472.01226806640625,
+    524.2467041015625,
+    481.0948486328125
+   ],
+   "table": "Table 2",
+   "section": "5.1",
+   "text": "78.9 ± 0.0"
+  },
+  "origin": "hand"
+ },
+ {
+  "claim_id": "C-04",
+  "text": "GCN reaches 81.4% test accuracy on Cora, averaged over 10 runs (Table 2)",
+  "metric": "accuracy",
+  "value": 81.4,
+  "value_text": "81.4",
+  "decimals": 1,
+  "dataset": "Cora",
+  "model": "GCN",
+  "n_test": 1000,
+  "n_seeds_reported": 10,
+  "dispersion": 0.4,
+  "dispersion_kind": "std",
+  "stated_config": {},
+  "procedures": [
+   "averaged over 10 runs",
+   "public Planetoid split"
+  ],
+  "required_params": [
+   "epochs",
+   "optimizer",
+   "lr",
+   "weight_decay",
+   "degree",
+   "split",
+   "seed"
+  ],
+  "source": {
+   "page": 6,
+   "bbox": [
+    374.2120056152344,
+    400.30126953125,
+    413.6347351074219,
+    409.38385009765625
+   ],
+   "table": "Table 2",
+   "section": "5.1",
+   "text": "81.4 ± 0.4"
+  },
+  "origin": "hand"
+ },
+ {
+  "claim_id": "C-05",
+  "text": "DGI reaches 82.5% test accuracy on Cora, averaged over 10 runs (Table 2)",
+  "metric": "accuracy",
+  "value": 82.5,
+  "value_text": "82.5",
+  "decimals": 1,
+  "dataset": "Cora",
+  "model": "DGI",
+  "n_test": 1000,
+  "n_seeds_reported": 10,
+  "dispersion": 0.7,
+  "dispersion_kind": "std",
+  "stated_config": {},
+  "procedures": [
+   "averaged over 10 runs",
+   "public Planetoid split"
+  ],
+  "required_params": [
+   "epochs",
+   "optimizer",
+   "lr",
+   "weight_decay",
+   "degree",
+   "split",
+   "seed"
+  ],
+  "source": {
+   "page": 6,
+   "bbox": [
+    374.2120056152344,
+    462.0492858886719,
+    413.6347351074219,
+    471.1318664550781
+   ],
+   "table": "Table 2",
+   "section": "5.1",
+   "text": "82.5 ± 0.7"
+  },
+  "origin": "hand"
+ }
+]

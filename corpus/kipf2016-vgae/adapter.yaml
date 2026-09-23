@@ -1,0 +1,71 @@
+paper_id: kipf2016-vgae
+image: ''
+workdir: gae
+setup: []
+command: python train.py
+flags:
+  model: --model
+  epochs: --epochs
+  hidden1: --hidden1
+  hidden2: --hidden2
+  lr: --lr
+  dropout: --dropout
+  dataset: --dataset-str
+config_types:
+  model: str
+  epochs: int
+  hidden1: int
+  hidden2: int
+  lr: float
+  dropout: float
+  dataset: str
+seed_flag: --seed
+metrics:
+  roc_auc:
+    witness_fn: roc_auc_score
+    stdout_regex: 'Test ROC score: ([0-9.]+)'
+    scale: 100.0
+  average_precision:
+    witness_fn: average_precision_score
+    stdout_regex: 'Test AP score: ([0-9.]+)'
+    scale: 100.0
+pythonpath: ['.']
+smoke_overrides:
+  epochs: 1
+python: '3.8'
+validated: true
+validation_log:
+  - Hand-written adapter. Entry point gae/train.py is run from the gae directory because load_data reads data/ind.<dataset>.* relative to the working directory, and the repository root is added to PYTHONPATH because train.py imports the gae package.
+claim_map:
+  C-01:
+    status: mapped
+    config: {}
+    metric: roc_auc
+    code_ref: gae/utils.py:186
+  C-02:
+    status: mapped
+    config: {}
+    metric: average_precision
+    code_ref: gae/utils.py:187
+  C-03:
+    status: mapped
+    config: {dataset: citeseer}
+    metric: roc_auc
+    code_ref: gae/utils.py:186
+  C-04:
+    status: mapped
+    config: {dataset: citeseer}
+    metric: average_precision
+    code_ref: gae/utils.py:187
+  C-05:
+    status: not_implemented
+    reason: gae/data holds only Cora and Citeseer files; load_data reads data/ind.pubmed.* which the repository does not provide.
+    code_ref: gae/utils.py:21
+  C-06:
+    status: not_implemented
+    reason: train.py always constructs GCNModelVAE; the --model argument is parsed (observed in the Witness ARGS record) but never read, so no code path builds the non-variational GAE.
+    code_ref: gae/train.py:51
+  C-07:
+    status: not_implemented
+    reason: train.py always constructs GCNModelVAE; the --model argument is parsed (observed in the Witness ARGS record) but never read, so no code path builds the non-variational GAE.
+    code_ref: gae/train.py:51

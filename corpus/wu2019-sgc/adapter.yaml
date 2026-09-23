@@ -1,0 +1,57 @@
+paper_id: wu2019-sgc
+image: ''
+workdir: .
+setup: []
+command: python citation.py
+flags:
+  dataset: --dataset
+  model: --model
+  epochs: --epochs
+  lr: --lr
+  weight_decay: --weight_decay
+  degree: --degree
+  tuned: --tuned
+config_types:
+  dataset: str
+  model: str
+  epochs: int
+  lr: float
+  weight_decay: float
+  degree: int
+  tuned: flag
+seed_flag: --seed
+metrics:
+  accuracy:
+    witness_fn: metrics:accuracy
+    stdout_regex: 'Test Accuracy: ([0-9.]+)'
+    scale: 100.0
+    rescore_fn: accuracy_score
+pythonpath: []
+smoke_overrides:
+  epochs: 1
+validated: true
+validation_log:
+  - Hand-written adapter following the repository README, which runs citation.py with --tuned to load the weight decay stored under SGC-tuning/.
+claim_map:
+  C-01:
+    status: mapped
+    config: {dataset: cora, tuned: true}
+    metric: accuracy
+    code_ref: citation.py:62
+  C-02:
+    status: mapped
+    config: {dataset: citeseer, tuned: true, epochs: 150}
+    metric: accuracy
+    code_ref: citation.py:62
+  C-03:
+    status: mapped
+    config: {dataset: pubmed, tuned: true}
+    metric: accuracy
+    code_ref: citation.py:62
+  C-04:
+    status: not_implemented
+    reason: citation.py trains only when --model is SGC; with --model GCN no training call is made and acc_test is never defined, and --tuned raises for any model other than SGC.
+    code_ref: citation.py:59
+  C-05:
+    status: not_implemented
+    reason: The repository contains no DGI implementation; the number comes from the authors' separate experiments.

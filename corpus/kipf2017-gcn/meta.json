@@ -1,0 +1,14 @@
+{
+  "paper_id": "kipf2017-gcn",
+  "title": "Semi-Supervised Classification with Graph Convolutional Networks",
+  "authors": "Thomas N. Kipf, Max Welling",
+  "venue": "ICLR 2017",
+  "arxiv": "1609.02907v4",
+  "paper_date": "2017-02-22",
+  "repo_url": "https://github.com/tkipf/pygcn",
+  "repo_sha": "1600b5b748b3976413d1e307540ccc62605b4d6d",
+  "provenance": "author",
+  "provenance_note": "PyTorch reimplementation by the first author. Its README states that it is not intended to reproduce the reported results.",
+  "role": "curated",
+  "pdf_url": "https://arxiv.org/pdf/1609.02907v4"
+}

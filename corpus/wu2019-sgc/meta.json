@@ -1,0 +1,14 @@
+{
+  "paper_id": "wu2019-sgc",
+  "title": "Simplifying Graph Convolutional Networks",
+  "authors": "Felix Wu, Tianyi Zhang, Amauri Holanda de Souza Jr., Christopher Fifty, Tao Yu, Kilian Q. Weinberger",
+  "venue": "ICML 2019",
+  "arxiv": "1902.07153v2",
+  "paper_date": "2019-06-20",
+  "repo_url": "https://github.com/Tiiiger/SGC",
+  "repo_sha": "2c7a2727e82e462d8ef9d6e57f0b08888e16488f",
+  "provenance": "author",
+  "provenance_note": "Official implementation released by the authors.",
+  "role": "curated",
+  "pdf_url": "https://arxiv.org/pdf/1902.07153v2"
+}

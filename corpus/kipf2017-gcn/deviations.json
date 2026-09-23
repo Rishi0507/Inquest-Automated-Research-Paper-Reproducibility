@@ -1,0 +1,264 @@
+[
+ {
+  "dev_id": "d1",
+  "type": "SEMANTIC_MISMATCH",
+  "phase": "train",
+  "param": "adjacency.normalization",
+  "label": "Adjacency normalisation",
+  "paper_value": "symmetric D^-1/2 (A+I) D^-1/2",
+  "repo_value": "row D^-1 (A+I)",
+  "paper_span": {
+   "page": 7,
+   "bbox": [
+    116.61102294921875,
+    660.0485229492188,
+    188.0030059814453,
+    670.0111083984375
+   ],
+   "table": null,
+   "section": "6.2",
+   "text": "Renormalization"
+  },
+  "code_ref": "pygcn/utils.py:39",
+  "patch": {
+   "code": [
+    {
+     "file": "pygcn/utils.py",
+     "probe": "d1",
+     "find": "    adj = normalize(adj + sp.eye(adj.shape[0]))\n",
+     "replace": "    adj = adj + sp.eye(adj.shape[0])\n    d_inv_sqrt = np.power(np.array(adj.sum(1)), -0.5).flatten()\n    d_inv_sqrt[np.isinf(d_inv_sqrt)] = 0.\n    d_mat = sp.diags(d_inv_sqrt)\n    adj = d_mat.dot(adj).dot(d_mat)\n"
+    }
+   ]
+  },
+  "source": "hand",
+  "witness_idx": null,
+  "patch_verified": false,
+  "togglable": true,
+  "alternatives": [],
+  "note": null
+ },
+ {
+  "dev_id": "d2",
+  "type": "UNIMPLEMENTED_IN_CODE",
+  "phase": "train",
+  "param": "early_stopping_window",
+  "label": "Early stopping absent",
+  "paper_value": 10,
+  "repo_value": null,
+  "paper_span": {
+   "page": 6,
+   "bbox": [
+    208.6920166015625,
+    381.81121826171875,
+    218.65460205078125,
+    391.7738342285156
+   ],
+   "table": null,
+   "section": "5.2",
+   "text": "10"
+  },
+  "code_ref": "pygcn/train.py:100",
+  "patch": {
+   "code": [
+    {
+     "file": "pygcn/train.py",
+     "find": "          'time: {:.4f}s'.format(time.time() - t))\n",
+     "replace": "          'time: {:.4f}s'.format(time.time() - t))\n    return loss_val.item()\n"
+    },
+    {
+     "file": "pygcn/train.py",
+     "probe": "d2",
+     "find": "for epoch in range(args.epochs):\n    train(epoch)\n",
+     "replace": "best_val, bad_epochs = float('inf'), 0\nfor epoch in range(args.epochs):\n    val_loss = train(epoch)\n    if val_loss < best_val:\n        best_val, bad_epochs = val_loss, 0\n    else:\n        bad_epochs += 1\n    if bad_epochs >= 10:\n        break\n"
+    }
+   ]
+  },
+  "source": "hand",
+  "witness_idx": null,
+  "patch_verified": false,
+  "togglable": true,
+  "alternatives": [],
+  "note": null
+ },
+ {
+  "dev_id": "d3",
+  "type": "VALUE_MISMATCH",
+  "phase": "train",
+  "param": "weight_decay.scope",
+  "label": "L2 on all layers",
+  "paper_value": "first layer",
+  "repo_value": "all parameters",
+  "paper_span": {
+   "page": 6,
+   "bbox": [
+    348.975341796875,
+    403.72918701171875,
+    364.4771423339844,
+    413.6918029785156
+   ],
+   "table": null,
+   "section": "5.2",
+   "text": "first"
+  },
+  "code_ref": "pygcn/train.py:49",
+  "patch": {
+   "code": [
+    {
+     "file": "pygcn/train.py",
+     "probe": "d3",
+     "find": "optimizer = optim.Adam(model.parameters(),\n                       lr=args.lr, weight_decay=args.weight_decay)\n",
+     "replace": "optimizer = optim.Adam([{'params': model.gc1.parameters(), 'weight_decay': args.weight_decay},\n                        {'params': model.gc2.parameters(), 'weight_decay': 0.0}],\n                       lr=args.lr)\n"
+    }
+   ]
+  },
+  "source": "hand",
+  "witness_idx": null,
+  "patch_verified": false,
+  "togglable": true,
+  "alternatives": [],
+  "note": null
+ },
+ {
+  "dev_id": "d4",
+  "type": "VALUE_MISMATCH",
+  "phase": "train",
+  "param": "weight_init",
+  "label": "Weight initialisation",
+  "paper_value": "Glorot",
+  "repo_value": "uniform(±1/sqrt(fan_out))",
+  "paper_span": {
+   "page": 6,
+   "bbox": [
+    385.09967041015625,
+    475.46014404296875,
+    411.1119689941406,
+    485.4227600097656
+   ],
+   "table": null,
+   "section": "5.2",
+   "text": "Glorot"
+  },
+  "code_ref": "pygcn/layers.py:27",
+  "patch": {
+   "code": [
+    {
+     "file": "pygcn/layers.py",
+     "probe": "d4",
+     "find": "        self.weight.data.uniform_(-stdv, stdv)\n",
+     "replace": "        torch.nn.init.xavier_uniform_(self.weight.data)\n"
+    }
+   ]
+  },
+  "source": "hand",
+  "witness_idx": null,
+  "patch_verified": false,
+  "togglable": true,
+  "alternatives": [],
+  "note": null
+ },
+ {
+  "dev_id": "d5",
+  "type": "VALUE_MISMATCH",
+  "phase": "train",
+  "param": "dropout.input",
+  "label": "No dropout on the input layer",
+  "paper_value": "dropout on all layers",
+  "repo_value": "hidden layer only",
+  "paper_span": {
+   "page": 7,
+   "bbox": [
+    273.9690246582031,
+    299.56005859375,
+    286.6993103027344,
+    309.5226745605469
+   ],
+   "table": null,
+   "section": "6.1",
+   "text": "0.5"
+  },
+  "code_ref": "pygcn/models.py:15",
+  "patch": {
+   "code": [
+    {
+     "file": "pygcn/models.py",
+     "probe": "d5",
+     "find": "        x = F.relu(self.gc1(x, adj))\n",
+     "replace": "        x = F.dropout(x, self.dropout, training=self.training)\n        x = F.relu(self.gc1(x, adj))\n"
+    }
+   ]
+  },
+  "source": "hand",
+  "witness_idx": null,
+  "patch_verified": false,
+  "togglable": true,
+  "alternatives": [],
+  "note": null
+ },
+ {
+  "dev_id": "d6",
+  "type": "VALUE_MISMATCH",
+  "phase": "train",
+  "param": "split.train_per_class",
+  "label": "Training split",
+  "paper_value": "20 labels per class",
+  "repo_value": "first 140 nodes",
+  "paper_span": {
+   "page": 6,
+   "bbox": [
+    107.99998474121094,
+    128.10438537597656,
+    117.96258544921875,
+    138.06698608398438
+   ],
+   "table": null,
+   "section": "5.1",
+   "text": "20"
+  },
+  "code_ref": "pygcn/utils.py:41",
+  "note": "The patch applies the stated procedure (20 per class, 500 validation, 1,000 test). The exact Planetoid indices are not distributed with this repository.",
+  "patch": {
+   "code": [
+    {
+     "file": "pygcn/utils.py",
+     "probe": "d6",
+     "find": "    idx_train = range(140)\n    idx_val = range(200, 500)\n    idx_test = range(500, 1500)\n",
+     "replace": "    lab = np.where(labels)[1]\n    idx_train = [int(i) for c in range(labels.shape[1]) for i in np.where(lab == c)[0][:20]]\n    chosen = set(idx_train)\n    rest = [i for i in range(len(lab)) if i not in chosen]\n    idx_val = rest[:500]\n    idx_test = rest[500:1500]\n"
+    }
+   ]
+  },
+  "source": "hand",
+  "witness_idx": null,
+  "patch_verified": false,
+  "togglable": true,
+  "alternatives": []
+ },
+ {
+  "dev_id": "d7",
+  "type": "UNSPECIFIED_IN_PAPER",
+  "phase": "train",
+  "param": "bias",
+  "label": "Bias terms",
+  "paper_value": null,
+  "repo_value": true,
+  "code_ref": "pygcn/models.py:10",
+  "note": "The paper's propagation rule has no bias term and the text does not mention one.",
+  "alternatives": [
+   false
+  ],
+  "patch": {
+   "code": [
+    {
+     "file": "pygcn/models.py",
+     "probe": "d7",
+     "find": "        self.gc1 = GraphConvolution(nfeat, nhid)\n        self.gc2 = GraphConvolution(nhid, nclass)\n",
+     "replace": "        self.gc1 = GraphConvolution(nfeat, nhid, bias=False)\n        self.gc2 = GraphConvolution(nhid, nclass, bias=False)\n"
+    }
+   ]
+  },
+  "source": "hand",
+  "witness_idx": null,
+  "patch_verified": false,
+  "togglable": true,
+  "paper_span": null
+ }
+]

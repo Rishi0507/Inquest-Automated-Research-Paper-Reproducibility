@@ -1,0 +1,14 @@
+{
+  "paper_id": "kipf2016-vgae",
+  "title": "Variational Graph Auto-Encoders",
+  "authors": "Thomas N. Kipf, Max Welling",
+  "venue": "NIPS 2016 Workshop on Bayesian Deep Learning",
+  "arxiv": "1611.07308v1",
+  "paper_date": "2016-11-21",
+  "repo_url": "https://github.com/zfjsail/gae-pytorch",
+  "repo_sha": "c0b95cac8eb2928d0b5d6d65fee938fe97f60262",
+  "provenance": "third_party",
+  "provenance_note": "PyTorch reimplementation by a third party. The authors' own code (tkipf/gae) targets TensorFlow 1.x, which is outside the Witness surface.",
+  "role": "hero",
+  "pdf_url": "https://arxiv.org/pdf/1611.07308v1"
+}

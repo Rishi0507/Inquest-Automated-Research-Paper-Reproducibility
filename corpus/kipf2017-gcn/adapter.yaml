@@ -1,0 +1,50 @@
+paper_id: kipf2017-gcn
+image: ''
+workdir: pygcn
+setup: []
+command: python train.py
+flags:
+  epochs: --epochs
+  lr: --lr
+  weight_decay: --weight_decay
+  hidden: --hidden
+  dropout: --dropout
+  fastmode: --fastmode
+config_types:
+  epochs: int
+  lr: float
+  weight_decay: float
+  hidden: int
+  dropout: float
+  fastmode: flag
+seed_flag: --seed
+metrics:
+  accuracy:
+    witness_fn: pygcn.utils:accuracy
+    stdout_regex: 'Test set results:.*accuracy= ([0-9.]+)'
+    scale: 100.0
+    rescore_fn: accuracy_score
+pythonpath: ['.']
+smoke_overrides:
+  epochs: 1
+validated: true
+validation_log:
+  - Hand-written adapter. pygcn/train.py is run from the pygcn directory because load_data reads ../data/cora/ relative to the working directory; the repository root is on PYTHONPATH because train.py imports the pygcn package.
+claim_map:
+  C-01:
+    status: mapped
+    config: {}
+    metric: accuracy
+    code_ref: pygcn/train.py:104
+  C-02:
+    status: not_implemented
+    reason: load_data reads only data/cora/ ("cora only for now"); no Citeseer files or loader exist in the repository.
+    code_ref: pygcn/utils.py:16
+  C-03:
+    status: not_implemented
+    reason: load_data reads only data/cora/ ("cora only for now"); no Pubmed files or loader exist in the repository.
+    code_ref: pygcn/utils.py:16
+  C-04:
+    status: not_implemented
+    reason: No code path draws random splits; the split is fixed at nodes 0-139 / 200-499 / 500-1499.
+    code_ref: pygcn/utils.py:41
