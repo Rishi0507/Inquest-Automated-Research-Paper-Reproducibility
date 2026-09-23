@@ -42,6 +42,8 @@ def alternative_patches(dev: Deviation, current=None) -> list[tuple[str, dict]]:
     if cfg:
         key = next(iter(cfg))
         values = list(dev.alternatives) or CATALOGUE.get(key, [])
+        if not values and isinstance(current, (int, float)) and not isinstance(current, bool) and current:
+            values = ["x0.5", "x2"]  # generic plausible range: half and double the code's value
         for v in values:
             if isinstance(v, str) and v.startswith("x") and current is not None:
                 v = type(current)(current * float(v[1:]))

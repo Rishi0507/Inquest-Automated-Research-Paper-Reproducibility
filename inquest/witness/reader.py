@@ -66,8 +66,19 @@ def bind_metric(spec: MetricSpec, events: list[WitnessEvent], stdout: str) -> di
             ev = matching[-1]
             return {"value_raw": ev.value, "source": f"witness:{ev.caller}", "event": ev, "printed": text,
                     "binding": "value_match"}
-        return {"value_raw": value, "source": "stdout", "event": None, "printed": text,
-                "binding": "no_witnessed_call_matches_printed_value"}
+    if printed is not None:
+        # The expected function never produced the printed number. Bind to whichever witnessed
+        # metric call did: that call, not the adapter's expectation, is what the code computes.
+        value, text = printed
+        tol = max(1e-6, 0.5 * 10 ** (-_decimals(text)))
+        others = [e for e in events if e.kind == "METRIC_CALL" and e.value is not None and abs(e.value - value) <= tol]
+        if others:
+            ev = others[-1]
+            return {"value_raw": ev.value, "source": f"witness:{ev.caller}", "event": ev, "printed": text,
+                    "binding": "value_match_other_function"}
+        if calls:
+            return {"value_raw": value, "source": "stdout", "event": None, "printed": text,
+                    "binding": "no_witnessed_call_matches_printed_value"}
     if calls:
         ev = calls[-1]
         return {"value_raw": ev.value, "source": f"witness:{ev.caller}", "event": ev, "printed": None,
