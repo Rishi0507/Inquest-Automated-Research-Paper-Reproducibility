@@ -9,8 +9,15 @@ from dotenv import load_dotenv
 ROOT = Path(__file__).resolve().parent.parent
 load_dotenv(ROOT / ".env")
 
-WORKSPACE = Path(os.environ.get("INQUEST_WORKSPACE", ROOT / ".inquest")).resolve()
-CORPUS = Path(os.environ.get("INQUEST_CORPUS", ROOT / "corpus")).resolve()
+
+def _env(name: str, default):
+    """Environment value, treating an empty string as unset."""
+    value = os.environ.get(name, "")
+    return value if value.strip() else default
+
+
+WORKSPACE = Path(_env("INQUEST_WORKSPACE", ROOT / ".inquest")).resolve()
+CORPUS = Path(_env("INQUEST_CORPUS", ROOT / "corpus")).resolve()
 
 REPOS = WORKSPACE / "repos"          # pinned clones, one per paper
 WORKTREES = WORKSPACE / "worktrees"  # patched copies, keyed by code patch hash
@@ -26,16 +33,16 @@ UV_PYTHON = WORKSPACE / "python"
 
 WITNESS_DIR = Path(__file__).resolve().parent / "witness"
 
-SANDBOX = os.environ.get("INQUEST_SANDBOX", "local")        # "local" or "docker"
-LLM_MODEL = os.environ.get("INQUEST_LLM_MODEL", "claude-opus-5")
-LOCAL_LLM_URL = os.environ.get("INQUEST_LOCAL_LLM_URL", "")  # OpenAI-compatible endpoint
-LOCAL_LLM_MODEL = os.environ.get("INQUEST_LOCAL_LLM_MODEL", "")
+SANDBOX = _env("INQUEST_SANDBOX", "local")        # "local" or "docker"
+LLM_MODEL = _env("INQUEST_LLM_MODEL", "claude-opus-5")
+LOCAL_LLM_URL = _env("INQUEST_LOCAL_LLM_URL", "")  # Ollama server, e.g. http://localhost:11434
+LOCAL_LLM_MODEL = _env("INQUEST_LOCAL_LLM_MODEL", "")
 
 CPU_COUNT = os.cpu_count() or 2
-THREADS_PER_RUN = int(os.environ.get("INQUEST_THREADS_PER_RUN", "1"))
-WORKERS = int(os.environ.get("INQUEST_WORKERS", str(max(1, CPU_COUNT // max(1, THREADS_PER_RUN) // 2 or 1))))
-RUN_TIMEOUT_S = int(os.environ.get("INQUEST_RUN_TIMEOUT", "180"))
-RUN_MEMORY_MB = int(os.environ.get("INQUEST_RUN_MEMORY_MB", "4096"))
+THREADS_PER_RUN = int(_env("INQUEST_THREADS_PER_RUN", "1"))
+WORKERS = int(_env("INQUEST_WORKERS", str(max(1, CPU_COUNT // max(1, THREADS_PER_RUN) // 2 or 1))))
+RUN_TIMEOUT_S = int(_env("INQUEST_RUN_TIMEOUT", "420"))
+RUN_MEMORY_MB = int(_env("INQUEST_RUN_MEMORY_MB", "4096"))
 
 STANDING_NOTE = (
     "Execution ran on CPU in a pinned environment. The authors' hardware is unknown."

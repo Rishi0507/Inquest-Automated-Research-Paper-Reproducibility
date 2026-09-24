@@ -16,7 +16,7 @@ import pymupdf
 
 from .schemas import PDFSpan
 
-_TRANSLATE = str.maketrans({"−": "-", "–": "-", "—": "-", " ": " ", "ﬁ": "fi", "ﬂ": "fl"})
+_TRANSLATE = str.maketrans({"\u2212": "-", "\u2013": "-", "\u2014": "-", "\u00a0": " ", "\ufb01": "fi", "\ufb02": "fl"})
 
 
 def norm(text: str) -> str:

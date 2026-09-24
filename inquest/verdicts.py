@@ -14,18 +14,25 @@ PARTIAL_FRACTION = 0.30
 SELECTION_K = 10.0
 
 
-def _inside(x: float, band: Optional[Band]) -> bool:
-    return band is not None and band.lo <= x <= band.hi
+def _inside(x: float, band: Optional[Band], half: float = 0.0) -> bool:
+    """A printed value stands for [x - half, x + half); it is inside when that interval meets the band."""
+    return band is not None and band.lo - half <= x <= band.hi + half
+
+
+def half_unit(decimals: int) -> float:
+    return 0.5 * 10 ** (-decimals)
 
 
 def decide(claim_id: str, reported: float, *, preflight: Optional[dict] = None, mapping_status: str = "mapped",
            mapping_reason: Optional[str] = None, runnable: bool = True, baseline_failed: bool = False,
            baseline_error: Optional[str] = None, seed_band: Optional[Band] = None, aligned_band: Optional[Band] = None,
            spec_band: Optional[tuple[float, float]] = None, attribution: Optional[dict] = None,
-           selection: Optional[SelectionSignal] = None, sci: float = 0.0, flags: Optional[list[str]] = None
-           ) -> ClaimVerdict:
+           selection: Optional[SelectionSignal] = None, sci: float = 0.0, flags: Optional[list[str]] = None,
+           decimals: Optional[int] = None) -> ClaimVerdict:
     flags = list(flags or [])
     reasons: list[str] = []
+    half = half_unit(decimals) if decimals is not None else 0.0
+    prec = f" (printed to {decimals} decimal{'s' if decimals != 1 else ''}, so it stands for [{reported - half:.{decimals + 2}f}, {reported + half:.{decimals + 2}f}))" if decimals is not None else ""
     shares = [Share.model_validate(s) for s in (attribution or {}).get("shares", [])] or None
     residual = (attribution or {}).get("residual")
 
@@ -50,16 +57,17 @@ def decide(claim_id: str, reported: float, *, preflight: Optional[dict] = None, 
     if baseline_failed:
         reasons.append(f"Baseline run failed: {baseline_error or 'unknown error'}")
         return out("NOT_EXECUTABLE")
-    if _inside(reported, seed_band):
-        reasons.append(f"{reported} lies inside the baseline seed band [{seed_band.lo:.2f}, {seed_band.hi:.2f}]")
+    if _inside(reported, seed_band, half):
+        reasons.append(f"{reported} lies inside the baseline seed band [{seed_band.lo:.2f}, {seed_band.hi:.2f}]"
+                       + (prec if not _inside(reported, seed_band) else ""))
         return out("REPRODUCED")
     if seed_band:
         reasons.append(f"{reported} lies outside the baseline seed band [{seed_band.lo:.2f}, {seed_band.hi:.2f}]")
-    if attribution and _inside(reported, aligned_band):
+    if attribution and _inside(reported, aligned_band, half):
         reasons.append(f"After aligning the attributed deviations, {reported} lies inside the aligned band "
                        f"[{aligned_band.lo:.2f}, {aligned_band.hi:.2f}]")
         return out("NOT_REPRODUCED_EXPLAINED")
-    if spec_band and spec_band[0] <= reported <= spec_band[1]:
+    if spec_band and spec_band[0] - half <= reported <= spec_band[1] + half:
         reasons.append(f"{reported} lies inside the specification band [{spec_band[0]:.2f}, {spec_band[1]:.2f}]: "
                        "the paper's text permits it")
         return out("UNDERSPECIFIED")
