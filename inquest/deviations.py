@@ -96,6 +96,8 @@ def _match_arg(param: str, observed: dict, extra: dict[str, str]) -> Optional[st
 
 def ast_findings(repo: Path, files: Optional[list[Path]] = None) -> list[dict]:
     """Hardcoded constants that change results: metric averaging, split settings, seeds, init."""
+    import warnings
+    warnings.filterwarnings("ignore", category=SyntaxWarning)
     out = []
     targets = files or [p for p in repo.rglob("*.py") if ".git" not in p.parts]
     for py in targets:
@@ -218,6 +220,18 @@ def stated_vs_observed(claims: list[Claim], witness_block: dict) -> list[dict]:
             seen.add(param)
             base = param.split(".")[0]
             obs, where, kind = None, None, None
+            if param == "weight_decay.scope" and opt:
+                groups = opt.get("param_groups") or []
+                decayed = [g for g in groups if (_num(g.get("weight_decay")) or 0) > 0]
+                obs = ("all parameters" if len(decayed) == len(groups) else
+                       f"{len(decayed)} of {len(groups)} parameter groups")
+                where, kind = opt["caller"], "OPTIMIZER param_groups"
+                paper_scope = str(sp.value).lower()
+                status = "match" if (paper_scope in ("all", "all_parameters") and obs == "all parameters") or \
+                    (paper_scope != "all" and obs != "all parameters") else "mismatch"
+                rows.append({"param": param, "paper": sp.value, "span": sp.span.model_dump(), "observed": obs,
+                             "where": where, "via": kind, "status": status})
+                continue
             if base == "optimizer" and opt:
                 obs, where, kind = opt["name"], opt["caller"], "OPTIMIZER"
             elif base in ("lr", "weight_decay") and opt and opt.get(base) is not None:
@@ -246,9 +260,6 @@ def find(paper_id: str, claims: list[Claim], analysis: dict, log: Callable[[str]
     witness = analysis.get("witness") or []
     if not witness:
         return []
-    summary = witness[0]["summary"]
-    observed = _observed_args(summary)
-    dest_key = _dest_to_config_key(adapter, summary)
     stated: dict = {}
     spans: dict[str, PDFSpan] = {}
     for c in claims:
@@ -257,128 +268,153 @@ def find(paper_id: str, claims: list[Claim], analysis: dict, log: Callable[[str]
             spans.setdefault(k, sp.span)
     devs: list[Deviation] = []
 
+    origin: dict[str, dict] = {}
+    current_cfg: dict = {}
+
     def add(**kw) -> Deviation:
+        """Record a deviation once, however many configurations show it."""
+        for d in devs:
+            if d.type == kw["type"] and d.param == kw["param"] and str(d.repo_value) == str(kw.get("repo_value")):
+                return d
         d = Deviation(dev_id=f"f{len(devs) + 1}", **kw)
         devs.append(d)
+        origin[d.dev_id] = current_cfg
         return d
 
-    # 1a. stated parameters against resolved arguments and constructed objects
-    unmatched = []
-    opt = (summary.get("optimizers") or [None])[-1]
-    for param, value in stated.items():
-        base = param.split(".")[0]
-        if base == "optimizer" and opt:
-            if not _equal(opt["name"], value):
-                add(type="VALUE_MISMATCH", phase="train", param="optimizer", paper_value=value, repo_value=opt["name"],
-                    paper_span=spans[param], witness_idx=opt["idx"], code_ref=opt["caller"], source="witness",
-                    label=f"Optimizer {opt['name']} instead of {value}", togglable=True, patch={})
-            continue
-        if base in ("lr", "weight_decay") and opt and _num(value) is not None:
-            seen = opt.get(base)
-            if seen is not None and not _equal(seen, value):
-                dest = _match_arg(param, observed, {})
-                key = dest_key.get(dest) if dest else None
-                add(type="VALUE_MISMATCH", phase="train", param=base, paper_value=value, repo_value=seen,
-                    paper_span=spans[param], witness_idx=opt["idx"], code_ref=opt["caller"], source="witness",
-                    label=f"{base} {seen} (observed at the optimizer) against {value}",
-                    # verified where it was observed: the optimizer, not the argument namespace
-                    patch={key: value, "expect": [{"kind": "OPTIMIZER", "key": base, "value": value}]} if key else {})
-            continue
-        dest = _match_arg(param, observed, {})
-        if dest is None:
-            unmatched.append(param)
-            continue
-        seen = observed[dest]
-        if _num(value) is None and _num(seen) is not None:
-            continue  # descriptive statement such as "tuned"; not comparable to a number
-        if not _equal(seen, value):
+    # Every mapped configuration is compared: a documented command for one dataset may set
+    # values that the default configuration does not.
+    for block in witness:
+        summary = block["summary"]
+        current_cfg = block.get("config", {})
+        observed = _observed_args(summary)
+        dest_key = _dest_to_config_key(adapter, summary)
+        # 1a. stated parameters against resolved arguments and constructed objects
+        unmatched = []
+        opt = (summary.get("optimizers") or [None])[-1]
+        for param, value in stated.items():
+            base = param.split(".")[0]
+            if param == "weight_decay.scope":
+                if opt:
+                    groups = opt.get("param_groups") or []
+                    decayed = [g for g in groups if (_num(g.get("weight_decay")) or 0) > 0]
+                    if groups and len(decayed) == len(groups) and str(value).lower() not in ("all", "all_parameters"):
+                        add(type="VALUE_MISMATCH", phase="train", param=param, paper_value=value,
+                            repo_value="all parameters", paper_span=spans[param], witness_idx=opt["idx"],
+                            code_ref=opt["caller"], source="witness",
+                            label=f"Weight decay on all parameters, paper: {value}", patch={})
+                continue
+            if base == "optimizer" and opt:
+                if not _equal(opt["name"], value):
+                    add(type="VALUE_MISMATCH", phase="train", param="optimizer", paper_value=value, repo_value=opt["name"],
+                        paper_span=spans[param], witness_idx=opt["idx"], code_ref=opt["caller"], source="witness",
+                        label=f"Optimizer {opt['name']} instead of {value}", togglable=True, patch={})
+                continue
+            if base in ("lr", "weight_decay") and opt and _num(value) is not None:
+                seen = opt.get(base)
+                if seen is not None and not _equal(seen, value):
+                    dest = _match_arg(param, observed, {})
+                    key = dest_key.get(dest) if dest else None
+                    add(type="VALUE_MISMATCH", phase="train", param=base, paper_value=value, repo_value=seen,
+                        paper_span=spans[param], witness_idx=opt["idx"], code_ref=opt["caller"], source="witness",
+                        label=f"{base} {seen} (observed at the optimizer) against {value}",
+                        # verified where it was observed: the optimizer, not the argument namespace
+                        patch={key: value, "expect": [{"kind": "OPTIMIZER", "key": base, "value": value}]} if key else {})
+                continue
+            dest = _match_arg(param, observed, {})
+            if dest is None:
+                unmatched.append(param)
+                continue
+            seen = observed[dest]
+            if _num(value) is None and _num(seen) is not None:
+                continue  # descriptive statement such as "tuned"; not comparable to a number
+            if not _equal(seen, value):
+                key = dest_key.get(dest)
+                add(type="VALUE_MISMATCH", phase="train", param=param, paper_value=value, repo_value=seen,
+                    paper_span=spans[param], witness_idx=summary["args"]["idx"], code_ref=summary["args"]["caller"],
+                    source="witness", label=f"{param} {seen} against {value}", patch={key: value} if key else {})
+
+        # 1b. names the lexicon could not place: model-proposed mapping, then the same comparison
+        for param, dest in _llm_name_map(unmatched, observed, log).items():
+            value, seen = stated[param], observed[dest]
+            if _num(value) is not None and not _equal(seen, value):
+                key = dest_key.get(dest)
+                add(type="VALUE_MISMATCH", phase="train", param=param, paper_value=value, repo_value=seen,
+                    paper_span=spans[param], witness_idx=summary["args"]["idx"], code_ref=summary["args"]["caller"],
+                    source="llm", label=f"{param} {seen} against {value} (name mapped by model)",
+                    patch={key: value} if key else {})
+
+        # 1c. metric definition: claim metric against the witnessed function
+        bound = {}
+        for w in witness:
+            for mkey, src in (w.get("metric_sources") or {}).items():
+                bound[mkey] = (src, w["summary"])
+        for c in claims:
+            cm = adapter.claim_map.get(c.claim_id)
+            mkey = cm.metric if cm and cm.metric else c.metric
+            want = METRIC_FUNCTIONS.get(c.metric)
+            if not want or mkey not in bound:
+                continue
+            src, summ = bound[mkey]
+            if not src.startswith("witness:"):
+                continue
+            site = src.split(":", 1)[1]
+            call = next((m for m in reversed(summ.get("metric_sites", [])) if m["caller"] == site), None)
+            if not call or ":" in call["name"]:
+                continue
+            fn, kwargs = want
+            seen_kw = {k: str(v).strip("'\"") for k, v in call["kwargs"].items()}
+            same_fn = call["name"] == fn
+            same_kw = all(seen_kw.get(k) == v for k, v in kwargs.items())
+            if not (same_fn and same_kw) and not any(d.param == f"metric:{mkey}" for d in devs):
+                add(type="SEMANTIC_MISMATCH", phase="eval", param=f"metric:{mkey}", paper_value=c.metric,
+                    repo_value=f"{call['name']}({', '.join(f'{k}={v}' for k, v in seen_kw.items())})",
+                    paper_span=c.source, witness_idx=call["idx"], code_ref=site, source="witness",
+                    label=f"Metric definition: {call['name']} instead of {c.metric}",
+                    patch={"metric": {"fn": fn, "kwargs": kwargs}})
+
+        # 1d. seeding: the paper fixes seeds or splits, the code never seeds
+        seed_arg = any("seed" in k.lower() for k in observed)
+        if seed_arg and not summary.get("seed_calls"):
+            span = spans.get("split.fixed_across_runs") or spans.get("seed")
+            add(type="UNIMPLEMENTED_IN_CODE", phase="train", param="seed", paper_value="seeded runs",
+                repo_value="seed argument parsed, no seed call observed", paper_span=span,
+                witness_idx=summary["args"]["idx"], code_ref=summary["args"]["caller"], source="witness",
+                label="Seed argument has no effect", patch={},
+                note="The seed argument is parsed but no random, NumPy or PyTorch seed function is ever called.")
+
+        # 2. AST walk for evidence the Witness cannot see
+        repo = paper.repo_path
+        for f in ast_findings(repo):
+            if f["kind"] == "init" and "weight_init" in stated:
+                family = INIT_FAMILY.get(f["fn"])
+                paper_family = str(stated["weight_init"]).lower()
+                if family and family != paper_family and not any(d.param == "weight_init" for d in devs):
+                    add(type="VALUE_MISMATCH", phase="train", param="weight_init", paper_value=stated["weight_init"],
+                        repo_value=f["fn"], paper_span=spans["weight_init"], code_ref=f["code_ref"], source="ast",
+                        label=f"Weight initialisation {f['fn']} against {stated['weight_init']}", patch={})
+            elif f["kind"] == "split" and not f["stratify"] and any("stratif" in p for p in stated):
+                add(type="VALUE_MISMATCH", phase="train", param="split.stratify", paper_value=True, repo_value=False,
+                    code_ref=f["code_ref"], source="ast", label="Split is not stratified", patch={})
+
+        # 3. unspecified hyperparameters: numeric arguments the paper never mentions
+        mentioned = {_match_arg(p, observed, {}) for p in stated}
+        for dest, val in observed.items():
+            if dest in mentioned or _num(val) is None or isinstance(val, bool):
+                continue
+            low = dest.lower()
+            if any(t in low for t in NOT_HYPER) or not any(t in low for t in HYPER_LEXICON):
+                continue
             key = dest_key.get(dest)
-            add(type="VALUE_MISMATCH", phase="train", param=param, paper_value=value, repo_value=seen,
-                paper_span=spans[param], witness_idx=summary["args"]["idx"], code_ref=summary["args"]["caller"],
-                source="witness", label=f"{param} {seen} against {value}", patch={key: value} if key else {})
-
-    # 1b. names the lexicon could not place: model-proposed mapping, then the same comparison
-    for param, dest in _llm_name_map(unmatched, observed, log).items():
-        value, seen = stated[param], observed[dest]
-        if _num(value) is not None and not _equal(seen, value):
-            key = dest_key.get(dest)
-            add(type="VALUE_MISMATCH", phase="train", param=param, paper_value=value, repo_value=seen,
-                paper_span=spans[param], witness_idx=summary["args"]["idx"], code_ref=summary["args"]["caller"],
-                source="llm", label=f"{param} {seen} against {value} (name mapped by model)",
-                patch={key: value} if key else {})
-
-    # 1c. metric definition: claim metric against the witnessed function
-    bound = {}
-    for w in witness:
-        for mkey, src in (w.get("metric_sources") or {}).items():
-            bound[mkey] = (src, w["summary"])
-    for c in claims:
-        cm = adapter.claim_map.get(c.claim_id)
-        mkey = cm.metric if cm and cm.metric else c.metric
-        want = METRIC_FUNCTIONS.get(c.metric)
-        if not want or mkey not in bound:
-            continue
-        src, summ = bound[mkey]
-        if not src.startswith("witness:"):
-            continue
-        site = src.split(":", 1)[1]
-        call = next((m for m in reversed(summ.get("metric_sites", [])) if m["caller"] == site), None)
-        if not call or ":" in call["name"]:
-            continue
-        fn, kwargs = want
-        seen_kw = {k: str(v).strip("'\"") for k, v in call["kwargs"].items()}
-        same_fn = call["name"] == fn
-        same_kw = all(seen_kw.get(k) == v for k, v in kwargs.items())
-        if not (same_fn and same_kw) and not any(d.param == f"metric:{mkey}" for d in devs):
-            add(type="SEMANTIC_MISMATCH", phase="eval", param=f"metric:{mkey}", paper_value=c.metric,
-                repo_value=f"{call['name']}({', '.join(f'{k}={v}' for k, v in seen_kw.items())})",
-                paper_span=c.source, witness_idx=call["idx"], code_ref=site, source="witness",
-                label=f"Metric definition: {call['name']} instead of {c.metric}",
-                patch={"metric": {"fn": fn, "kwargs": kwargs}})
-
-    # 1d. seeding: the paper fixes seeds or splits, the code never seeds
-    seed_arg = any("seed" in k.lower() for k in observed)
-    if seed_arg and not summary.get("seed_calls"):
-        span = spans.get("split.fixed_across_runs") or spans.get("seed")
-        add(type="UNIMPLEMENTED_IN_CODE", phase="train", param="seed", paper_value="seeded runs",
-            repo_value="seed argument parsed, no seed call observed", paper_span=span,
-            witness_idx=summary["args"]["idx"], code_ref=summary["args"]["caller"], source="witness",
-            label="Seed argument has no effect", patch={},
-            note="The seed argument is parsed but no random, NumPy or PyTorch seed function is ever called.")
-
-    # 2. AST walk for evidence the Witness cannot see
-    repo = paper.repo_path
-    for f in ast_findings(repo):
-        if f["kind"] == "init" and "weight_init" in stated:
-            family = INIT_FAMILY.get(f["fn"])
-            paper_family = str(stated["weight_init"]).lower()
-            if family and family != paper_family and not any(d.param == "weight_init" for d in devs):
-                add(type="VALUE_MISMATCH", phase="train", param="weight_init", paper_value=stated["weight_init"],
-                    repo_value=f["fn"], paper_span=spans["weight_init"], code_ref=f["code_ref"], source="ast",
-                    label=f"Weight initialisation {f['fn']} against {stated['weight_init']}", patch={})
-        elif f["kind"] == "split" and not f["stratify"] and any("stratif" in p for p in stated):
-            add(type="VALUE_MISMATCH", phase="train", param="split.stratify", paper_value=True, repo_value=False,
-                code_ref=f["code_ref"], source="ast", label="Split is not stratified", patch={})
-
-    # 3. unspecified hyperparameters: numeric arguments the paper never mentions
-    mentioned = {_match_arg(p, observed, {}) for p in stated}
-    for dest, val in observed.items():
-        if dest in mentioned or _num(val) is None or isinstance(val, bool):
-            continue
-        low = dest.lower()
-        if any(t in low for t in NOT_HYPER) or not any(t in low for t in HYPER_LEXICON):
-            continue
-        key = dest_key.get(dest)
-        add(type="UNSPECIFIED_IN_PAPER", phase="train", param=dest, paper_value=None, repo_value=val,
-            witness_idx=summary["args"]["idx"], code_ref=summary["args"]["caller"], source="witness",
-            label=f"{dest} is not stated in the paper (code uses {val})",
-            patch={key: val} if key else {}, alternatives=[])
+            add(type="UNSPECIFIED_IN_PAPER", phase="train", param=dest, paper_value=None, repo_value=val,
+                witness_idx=summary["args"]["idx"], code_ref=summary["args"]["caller"], source="witness",
+                label=f"{dest} is not stated in the paper (code uses {val})",
+                patch={key: val} if key else {}, alternatives=[])
 
     # 4. code patches for deviations no configuration flag can express, or whose flag
     #    does not change what the Witness observes
     from . import patches as patching
-    base_cfg = witness[0].get("config", {})
     for i, d in enumerate(devs):
+        base_cfg = origin.get(d.dev_id, witness[0].get("config", {}))
         if d.phase != "train" or d.type == "UNSPECIFIED_IN_PAPER":
             continue
         if d.patch:

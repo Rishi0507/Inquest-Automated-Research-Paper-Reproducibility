@@ -330,15 +330,15 @@ def evidence(paper_id: str, claim_id: str):
     except KeyError:
         raise HTTPException(404, "unknown claim")
     code_refs = []
-    mp = (info or {}).get("mapping") or {}
-    if mp.get("code_ref"):
-        code_refs.append({"ref": mp["code_ref"], "why": "metric computed here" if mp.get("status") == "mapped"
-                          else "mapping evidence"})
     for w in a.get("witness", []) or []:
         if info and w["config"] == info.get("config"):
             for mkey, src in (w.get("metric_sources") or {}).items():
                 if mkey == info.get("metric_key") and src.startswith("witness:"):
-                    code_refs.append({"ref": src.split(":", 1)[1], "why": "observed metric call"})
+                    code_refs.append({"ref": src.split(":", 1)[1], "why": "metric call observed at runtime"})
+    mp = (info or {}).get("mapping") or {}
+    if mp.get("code_ref") and all(r["ref"] != mp["code_ref"] for r in code_refs):
+        code_refs.append({"ref": mp["code_ref"], "why": "mapping reference" if mp.get("status") == "mapped"
+                          else "why no code path produces it"})
     for d in a.get("deviations", []) or []:
         if d.get("code_ref"):
             code_refs.append({"ref": d["code_ref"], "why": f"{d['dev_id']} {d.get('label') or d['param']}"})

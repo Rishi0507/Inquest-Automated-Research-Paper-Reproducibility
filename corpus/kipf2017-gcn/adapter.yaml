@@ -35,7 +35,7 @@ claim_map:
     status: mapped
     config: {}
     metric: accuracy
-    code_ref: pygcn/train.py:104
+    code_ref: pygcn/train.py:92
   C-02:
     status: not_implemented
     reason: load_data reads only data/cora/ ("cora only for now"); no Citeseer files or loader exist in the repository.

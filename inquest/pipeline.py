@@ -238,10 +238,12 @@ def _analyze(paper: corpus.Paper, job: Job, result: dict, deviation_source: Opti
             job.log(f"baseline failed for {g['config']}: {failed[0].error}")
             continue
         # sequential extension for claims no run reaches
-        need_ext = any(max(res.metric(_metric_of(c, adapter)) or [float('inf')]) < c.value for c in g["claims"])
-        if need_ext and n >= swarm.DEFAULT_N:
-            job.log(f"no run reaches a reported value; extending to {swarm.EXTENDED_N} seeds")
-            more = swarm.collect(pid, g["config"], range(n, swarm.EXTENDED_N))
+        need_ext = any(max(res.metric(_metric_of(c, adapter)) or [float('inf')]) < c.value - verdicts.half_unit(c.decimals)
+                       for c in g["claims"])
+        max_seeds = budget.get("max_seeds", swarm.EXTENDED_N)
+        if need_ext and n >= swarm.DEFAULT_N and max_seeds > n:
+            job.log(f"no run reaches a reported value; extending to {max_seeds} seeds")
+            more = swarm.collect(pid, g["config"], range(n, max_seeds))
             res.runs += more.runs
             for mk, v in more.values.items():
                 res.values.setdefault(mk, []).extend(v)
@@ -253,7 +255,9 @@ def _analyze(paper: corpus.Paper, job: Job, result: dict, deviation_source: Opti
             vals = res.metric(metric)
             m = c.n_seeds_reported or 1
             b = swarm.band(vals, m)
-            sel = swarm.selection_signal(vals, c.value, "baseline")
+            half = verdicts.half_unit(c.decimals)
+            # The lower edge of the printed-precision interval: rounding never creates a flag.
+            sel = swarm.selection_signal(vals, c.value - half, "baseline")
             result["claims"][c.claim_id].update({
                 "metric_key": metric, "values": vals, "seed_band": b.model_dump(), "selection": sel.model_dump(),
                 "selection_resolution": swarm.resolution_limit(len(vals)), "config": g["config"],
@@ -283,7 +287,7 @@ def _analyze(paper: corpus.Paper, job: Job, result: dict, deviation_source: Opti
     job.stage("deviations")
     source = deviation_source or ("hand" if paper.hand_deviations() and paper.meta.get("deviation_source", "hand") == "hand"
                                   else "finder")
-    if source == "finder" and not paper.found_deviations():
+    if source == "finder":
         from . import deviations as finder
         found = finder.find(pid, claims, result, log=job.log)
         store.put_deviations(pid, "finder", [d.model_dump() for d in found])
@@ -311,7 +315,8 @@ def _analyze(paper: corpus.Paper, job: Job, result: dict, deviation_source: Opti
         for c in g["claims"]:
             info = result["claims"][c.claim_id]
             b = swarm.band(info["values"], c.n_seeds_reported or 1)
-            if b.lo <= c.value <= b.hi:
+            half = verdicts.half_unit(c.decimals)
+            if b.lo - half <= c.value <= b.hi + half:
                 info["attribution"] = None
                 continue
             if not attributable:
@@ -341,8 +346,8 @@ def _analyze(paper: corpus.Paper, job: Job, result: dict, deviation_source: Opti
                 ab = swarm.band(avals, c.n_seeds_reported or 1)
                 info["aligned_band"] = ab.model_dump()
                 info["aligned_values"] = avals
-                info["attribution"]["residual_in_noise"] = ab.lo <= c.value <= ab.hi
-                info["selection_aligned"] = swarm.selection_signal(avals, c.value, "aligned").model_dump()
+                info["attribution"]["residual_in_noise"] = ab.lo - half <= c.value <= ab.hi + half
+                info["selection_aligned"] = swarm.selection_signal(avals, c.value - half, "aligned").model_dump()
     job.stage("attribution", "done")
 
     # 10. specification sweep --------------------------------------------------------------
@@ -374,11 +379,12 @@ def _verdicts(paper, claims, result, job, runnable, groups, det=None, devs=None)
         mp = info.get("mapping", {"status": "unmappable"})
         g = group_of.get(c.claim_id)
         flags = []
-        if det and not det.get("deterministic"):
+        executed = bool(info.get("values"))
+        if executed and det and not det.get("deterministic"):
             flags.append("NON_DETERMINISTIC")
-        if det and det.get("hash_sensitive"):
+        if executed and det and det.get("hash_sensitive"):
             flags.append("HASH_SEED_SENSITIVE")
-        if devs and any(not d.get("togglable") for d in devs):
+        if executed and devs and any(not d.get("togglable") and d.get("type") in ATTRIBUTABLE for d in devs):
             flags.append("NON_TOGGLABLE_DEVIATIONS")
         src = (info.get("metric_key") and next((w["metric_sources"].get(info["metric_key"]) for w in
                                                 result.get("witness", []) if w["config"] == info.get("config")), None))
@@ -397,7 +403,7 @@ def _verdicts(paper, claims, result, job, runnable, groups, det=None, devs=None)
             mapping_reason=mp.get("reason"), runnable=runnable and mp.get("status") == "mapped",
             baseline_failed=bool(g and g.get("failed")), baseline_error=g.get("failed") if g else None,
             seed_band=seed_band, aligned_band=aligned, spec_band=spec_band, attribution=info.get("attribution"),
-            selection=sel, sci=sci_value or 0.0, flags=flags)
+            selection=sel, sci=sci_value or 0.0, flags=flags, decimals=c.decimals)
         info["verdict"] = v.model_dump()
         out.append(v.model_dump())
         _provenance(paper.paper_id, c, info, v)

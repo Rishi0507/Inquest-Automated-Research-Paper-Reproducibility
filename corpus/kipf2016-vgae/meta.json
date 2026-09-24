@@ -10,5 +10,10 @@
   "provenance": "third_party",
   "provenance_note": "PyTorch reimplementation by a third party. The authors' own code (tkipf/gae) targets TensorFlow 1.x, which is outside the Witness surface.",
   "role": "hero",
-  "pdf_url": "https://arxiv.org/pdf/1611.07308v1"
+  "pdf_url": "https://arxiv.org/pdf/1611.07308v1",
+  "analysis": {
+    "n_seeds": 20,
+    "max_seeds": 20,
+    "note": "Each run takes about 150 s on the reference CPU (the dense 2708 x 2708 reconstruction loss in torch 0.4.1), so sequential extension beyond 20 seeds is disabled for this paper. The selection signal's resolution limit is reported accordingly."
+  }
 }
