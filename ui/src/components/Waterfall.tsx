@@ -28,7 +28,7 @@ export default function Waterfall({ att }: { att: Attribution }) {
 
   return (
     <div>
-      <svg className="chart" viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Measured attribution of the gap between the repository and the reported value">
+      <div className="chart-scroll"><svg className="chart" viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Measured attribution of the gap between the repository and the reported value">
         {[lo, (lo + hi) / 2, hi].map((t, i) => (
           <g key={i} className="grid"><line x1={x(t)} x2={x(t)} y1={M.t} y2={H - M.b} /></g>
         ))}
@@ -97,7 +97,7 @@ export default function Waterfall({ att }: { att: Attribution }) {
         {[lo, (lo + hi) / 2, hi].map((t, i) => (
           <text key={i} x={x(t)} y={H - 8} textAnchor="middle" className="tnum">{t.toFixed(1)}</text>
         ))}
-      </svg>
+      </svg></div>
       <div className="legend">
         <span><i style={{ background: "var(--series)" }} />moves toward the reported value</span>
         <span><i style={{ background: "var(--neg)" }} />moves away</span>

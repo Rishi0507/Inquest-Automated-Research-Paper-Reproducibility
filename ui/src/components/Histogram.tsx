@@ -54,7 +54,7 @@ export default function Histogram({ values, reported, seedBand, specBand, aligne
 
   return (
     <div>
-      <svg className="chart" viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Distribution of runs across seeds with bands and the reported value">
+      <div className="chart-scroll"><svg className="chart" viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Distribution of runs across seeds with bands and the reported value">
         <g className="grid">{yt.map((t) => <line key={t} x1={M.l} x2={W - M.r} y1={y(t)} y2={y(t)} />)}</g>
         {specBand && (
           <motion.rect initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6 }}
@@ -100,7 +100,7 @@ export default function Histogram({ values, reported, seedBand, specBand, aligne
             style={{ fill: "var(--ink)", fontWeight: 600, fontSize: 12 }}>reported {reported}</text>
         </motion.g>
         {metric && <text x={W - M.r} y={H - 2} textAnchor="end">{metric}</text>}
-      </svg>
+      </svg></div>
       <div className="legend">
         <span><i style={{ background: "var(--series)" }} />runs (n={values.length})</span>
         {seedBand && <span><i style={{ background: "var(--band)" }} />seed band: what this code produces</span>}

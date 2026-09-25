@@ -45,8 +45,12 @@ function RegisterForm({ onStarted }: { onStarted: (paperId: string, jobId: strin
       <label className="field">Paper PDF URL
         <input className="input" placeholder="https://arxiv.org/pdf/xxxx.xxxxxvN" value={pdfUrl} onChange={(e) => setPdfUrl(e.target.value)} disabled={!!file} />
       </label>
-      <label className="field">or upload the PDF
-        <input className="input" type="file" accept="application/pdf" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+      <label className="drop" onDragOver={(e) => e.preventDefault()}
+        onDrop={(e) => { e.preventDefault(); const f = e.dataTransfer.files?.[0]; if (f) setFile(f); }}>
+        <input type="file" accept="application/pdf" onChange={(e) => setFile(e.target.files?.[0] ?? null)} hidden />
+        {file ? <span><strong>{file.name}</strong> <span className="muted">{(file.size / 1e6).toFixed(1)} MB</span></span>
+          : <span className="muted">or drop the PDF here, or <span style={{ color: "var(--accent)" }}>choose a file</span></span>}
+        {file && <button type="button" className="btn ghost small" onClick={(e) => { e.preventDefault(); setFile(null); }}>Remove</button>}
       </label>
       {!llmReady && (
         <div className="banner warn">Extraction and mapping need a language model. Set ANTHROPIC_API_KEY in the .env file, or point INQUEST_LOCAL_LLM_URL at a local Ollama model, then restart the server.</div>
@@ -97,8 +101,8 @@ export default function Papers() {
     { title: "Registered papers", items: papers.filter((p) => p.source === "registered") },
     { title: "Controls", items: papers.filter((p) => p.source === "variant") },
   ];
-  const run = async (fn: () => Promise<{ job_id: string }>) => {
-    try { setJobId((await fn()).job_id); refreshPapers(); } catch (e) { alertInline((e as Error).message); }
+  const run = async (fn: () => Promise<{ job_id: string }>): Promise<boolean> => {
+    try { setJobId((await fn()).job_id); refreshPapers(); return true; } catch (e) { alertInline((e as Error).message); return false; }
   };
   const [msg, setMsg] = useState<string | null>(null);
   const alertInline = (m: string) => { setMsg(m); window.setTimeout(() => setMsg(null), 6000); };
@@ -156,7 +160,7 @@ export default function Papers() {
                 </div>
                 <div className="hr" />
                 <div className="row">
-                  <button className="btn primary" disabled={!!selected.active_job} onClick={() => run(() => api.analyze(selected.paper_id)).then(() => go("runs"))}>Analyse</button>
+                  <button className="btn primary" disabled={!!selected.active_job} onClick={() => run(() => api.analyze(selected.paper_id)).then((ok) => ok && go("runs"))}>Analyse</button>
                   <button className="btn" disabled={!!selected.active_job} onClick={() => run(() => api.extract(selected.paper_id))}>Extract claims</button>
                   {selected.source === "registered" && <button className="btn" disabled={!!selected.active_job} onClick={() => run(() => api.cartographer(selected.paper_id))}>Draft adapter</button>}
                   <button className="btn ghost" onClick={() => go("claims")}>Claims</button>

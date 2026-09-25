@@ -393,3 +393,8 @@ table.t td.num, table.t th.num { text-align: right; font-variant-numeric: tabula
 @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
 .icon-btn { border: 1px solid var(--line); background: var(--surface); width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; cursor: pointer; color: var(--ink-2); }
 .icon-btn:hover { color: var(--ink); background: var(--surface-2); }
+
+.drop { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; border: 1px dashed var(--line-strong); border-radius: var(--radius-sm); cursor: pointer; font-size: 13.5px; transition: border-color 0.2s var(--ease), background 0.2s var(--ease); }
+.drop:hover { border-color: var(--accent); background: var(--accent-soft); }
+.chart-scroll { overflow-x: auto; }
+@media (max-width: 720px) { .chart-scroll .chart { min-width: 660px; } }
