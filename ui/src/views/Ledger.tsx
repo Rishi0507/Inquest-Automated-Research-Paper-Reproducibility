@@ -17,7 +17,7 @@ export default function Ledger() {
           {data.map((g) => (
             <div key={`${g.model}${g.dataset}${g.metric}`} className="card" style={{ padding: 6 }}>
               <div className="card-title" style={{ padding: "12px 14px 0" }}>
-                <span>{g.model} · {g.dataset} · {g.metric}</span>
+                <span>{g.model} · {g.dataset} · {g.metric}{g.protocol ? ` · ${g.protocol}` : ""}</span>
                 <span className="row small">
                   <span className="muted">spread {fmt(g.spread)} pts{g.band_width ? `, ${fmt(g.ratio, 1)}x the narrowest band` : ""}</span>
                   {g.flag && <span className="tag v-serious"><span className="dot" />inconsistent</span>}

@@ -124,7 +124,7 @@ export const api = {
 };
 
 export type LedgerEntry = { paper_id: string; paper_title: string; claim_id: string; model: string; dataset: string; metric: string; reported: number; value_text: string; n_runs: number | null; executed_mean: number | null; band: [number, number] | null; verdict: string | null };
-export type LedgerGroup = { model: string; dataset: string; metric: string; papers: string[]; entries: LedgerEntry[]; spread: number; band_width: number | null; ratio: number | null; flag: boolean };
+export type LedgerGroup = { model: string; dataset: string; metric: string; protocol: string | null; papers: string[]; entries: LedgerEntry[]; spread: number; band_width: number | null; ratio: number | null; flag: boolean };
 export type Variant = { paper_id: string; parent: string; kind: string; sealed: string | null; revealed: Record<string, any> | null };
 
 export const enc = (s: string) => encodeURIComponent(s);

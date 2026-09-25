@@ -1,4 +1,4 @@
-"""Claim ledger (component C15): claims that share a (model, dataset, metric) tuple across papers.
+"""Claim ledger (component C15): claims that share a (model, dataset, metric, protocol) tuple across papers.
 
 Each reported value is shown beside the value the platform executed and its measured band.
 A spread larger than three times the band width is flagged. Scope is the analysed corpus;
@@ -28,7 +28,7 @@ def entries() -> list[dict]:
             verdict = (info.get("verdict") or {}).get("verdict")
             out.append({
                 "paper_id": pid, "paper_title": paper.title, "claim_id": c.claim_id, "model": c.model,
-                "dataset": c.dataset, "metric": c.metric, "reported": c.value, "value_text": c.value_text,
+                "dataset": c.dataset, "metric": c.metric, "protocol": c.protocol, "reported": c.value, "value_text": c.value_text,
                 "n_runs": c.n_seeds_reported, "executed_mean": band["mean"] if band else None,
                 "band": [band["lo"], band["hi"]] if band else None, "verdict": verdict,
                 "source": c.source.model_dump(),
@@ -45,7 +45,7 @@ def groups(model: str | None = None, dataset: str | None = None, metric: str | N
             continue
         if metric and _norm(e["metric"]) != _norm(metric):
             continue
-        by[(_norm(e["model"]), _norm(e["dataset"]), _norm(e["metric"]))].append(e)
+        by[(_norm(e["model"]), _norm(e["dataset"]), _norm(e["metric"]), _norm(e["protocol"]))].append(e)
     out = []
     for key, items in by.items():
         papers = {i["paper_id"] for i in items}
@@ -57,6 +57,7 @@ def groups(model: str | None = None, dataset: str | None = None, metric: str | N
         band_width = min(widths) if widths else None
         out.append({
             "model": items[0]["model"], "dataset": items[0]["dataset"], "metric": items[0]["metric"],
+            "protocol": items[0]["protocol"],
             "papers": sorted(papers), "entries": items, "spread": spread, "band_width": band_width,
             "ratio": (spread / band_width) if band_width else None,
             "flag": bool(band_width and spread > 3 * band_width),
