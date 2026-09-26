@@ -219,17 +219,60 @@ def _uses_archive(reqs: list[str]) -> bool:
     return any(_name(r) in ARCHIVE_PACKAGES for r in reqs)
 
 
-def _compile(reqs: list[str], python: str, bound: str | None) -> tuple[bool, str]:
+def _post_bound(lock: str, bound: str) -> list[str]:
+    """Upper-bound constraints for locked packages released after `bound`.
+
+    PyTorch's archive also hosts wheels of other packages (NumPy among them) without upload
+    dates, so `--exclude-newer` cannot filter them. Their PyPI release dates can.
+    """
+    from packaging.version import InvalidVersion, Version
+    out = []
+    for line in lock.splitlines():
+        if "==" not in line:
+            continue
+        name, ver = line.split("==", 1)
+        name, ver = name.strip().lower(), ver.split(";")[0].strip()
+        if name in ARCHIVE_PACKAGES:
+            continue
+        try:
+            dates = _release_dates(name)
+        except Exception:
+            continue
+        base = ver.split("+")[0]
+        if base in dates and dates[base] > bound:
+            older = []
+            for v, d in dates.items():
+                try:
+                    if d <= bound and not Version(v).is_prerelease:
+                        older.append(Version(v))
+                except InvalidVersion:
+                    continue
+            if older:
+                out.append(f"{name}<={max(older)}")
+    return out
+
+
+def _compile(reqs: list[str], python: str, bound: str | None, platform: str | None = None) -> tuple[bool, str]:
     args = ["pip", "compile", "-", "--python-version", python, "--only-binary", ":all:",
             "--no-header", "--no-annotate", "--quiet"]
-    constraints = []
+    if platform:
+        args += ["--python-platform", platform]
+    constraints: list[str] = []
     if bound:
         args += ["--exclude-newer", bound]
         constraints = _era_constraints(reqs, bound)
-    if _uses_archive(reqs):
+    archive = _uses_archive(reqs)
+    if archive:
         args += ["--find-links", TORCH_ARCHIVE]
-    out = _uv(args, stdin="\n".join(reqs + constraints) + "\n")
-    return out.returncode == 0, (out.stdout if out.returncode == 0 else out.stderr)
+    for _ in range(4):
+        out = _uv(args, stdin="\n".join(reqs + constraints) + "\n")
+        if out.returncode != 0:
+            return False, out.stderr
+        extra = _post_bound(out.stdout, bound) if (bound and archive) else []
+        if not extra:
+            return True, out.stdout
+        constraints += extra
+    return False, "could not keep undated archive wheels within the date bound"
 
 
 def _last_line(text: str) -> str:

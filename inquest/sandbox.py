@@ -145,17 +145,31 @@ def execute(cmd: list[str], cwd: Path, repo_root: Path, env: dict, stdout_path: 
 
 DOCKERFILE = """FROM python:{python}-slim
 ENV PIP_NO_CACHE_DIR=1 PYTHONDONTWRITEBYTECODE=1
-COPY env.lock /tmp/env.lock
-RUN pip install -r /tmp/env.lock "wrapt>=1.14"
+COPY env.linux.lock /tmp/env.lock
+RUN pip install {find_links} -r /tmp/env.lock "wrapt>=1.14"
 """
 
 
-def build_image(paper_id: str, python: str, lock_path: Path) -> str:
-    """Build the pinned image for a paper from its lock file. Returns the image digest."""
+def build_image(paper_id: str, env_dir: Path) -> str:
+    """Build a pinned image from the paper's recorded resolution. Returns the image ID.
+
+    The lock stored with the paper was resolved for the host platform, so the same
+    requirements are resolved again for Linux at the same date bound and interpreter.
+    """
+    import json
+
+    from . import env as envmod
+
+    record = json.loads((env_dir / "env.json").read_text(encoding="utf-8"))
+    ok, lock = envmod._compile(record["requirements"], record["python"], record["effective_bound"], platform="linux")
+    if not ok:
+        raise RuntimeError(f"Linux resolution failed: {lock[-800:]}")
+    uses_archive = envmod._uses_archive(record["requirements"])
     ctx = config.TMP / f"image_{paper_id}"
     ctx.mkdir(parents=True, exist_ok=True)
-    (ctx / "Dockerfile").write_text(DOCKERFILE.format(python=python), encoding="utf-8")
-    shutil.copy(lock_path, ctx / "env.lock")
+    (ctx / "env.linux.lock").write_text(lock, encoding="utf-8")
+    find_links = f"--find-links {envmod.TORCH_ARCHIVE}" if uses_archive else ""
+    (ctx / "Dockerfile").write_text(DOCKERFILE.format(python=record["python"], find_links=find_links), encoding="utf-8")
     tag = f"inquest/{paper_id}:latest"
     subprocess.run(["docker", "build", "-t", tag, str(ctx)], check=True)
     digest = subprocess.run(["docker", "image", "inspect", "--format", "{{.Id}}", tag],
