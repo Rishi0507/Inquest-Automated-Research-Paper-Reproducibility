@@ -69,6 +69,33 @@ def _variant_dir(variant_id: str) -> Path:
     return config.CORPUS / variant_id
 
 
+REFERENCE_DECIMALS = 3
+
+
+def _variant_claims(parent: corpus.Paper, refs: dict[str, float]) -> list[dict]:
+    """The parent's claims with each executed value replaced by its reference.
+
+    The reference is a measured mean: it carries its own precision, and GRIM (a test of
+    printed counts) does not apply to it.
+    """
+    claims = []
+    for c in parent.hand_claims():
+        d = c.model_dump()
+        if c.claim_id in refs:
+            d.update({"value": refs[c.claim_id], "decimals": REFERENCE_DECIMALS, "n_test": None,
+                      "text": f"Reference for control: the unmodified repository's mean {refs[c.claim_id]:.3f} "
+                              f"(the paper prints {c.value_text})"})
+        claims.append(d)
+    return claims
+
+
+def refresh_claims(variant_id: str) -> None:
+    """Rewrite a variant's claims from its parent with current reference values (cached runs)."""
+    v = corpus.get(variant_id)
+    claims = _variant_claims(corpus.get(v.parent_id), reference_values(v.parent_id))
+    (v.dir / "claims.json").write_text(json.dumps(claims, indent=1, ensure_ascii=False), encoding="utf-8")
+
+
 def reference_values(parent_id: str, n: int = 20) -> dict[str, float]:
     """The parent repository's measured mean per mapped claim over seeds 0..n-1 (cached runs)."""
     parent = corpus.get(parent_id)
@@ -81,7 +108,7 @@ def reference_values(parent_id: str, n: int = 20) -> dict[str, float]:
         runs = runner.run_many(RunRequest(paper_id=parent_id, config=cm.config, seed=s) for s in range(n))
         vals = [r.metrics[cm.metric or c.metric] for r in runs if r.ok]
         if vals:
-            out[c.claim_id] = round(float(np.mean(vals)), 4)
+            out[c.claim_id] = round(float(np.mean(vals)), REFERENCE_DECIMALS)
     return out
 
 
@@ -90,16 +117,7 @@ def _write_variant(variant_id: str, parent_id: str, kind: str, repo_src: Path, r
     parent = corpus.get(parent_id)
     vdir = _variant_dir(variant_id)
     vdir.mkdir(parents=True, exist_ok=True)
-    claims = []
-    for c in parent.hand_claims():
-        if only_claims and c.claim_id not in only_claims:
-            continue
-        d = c.model_dump()
-        if c.claim_id in refs:
-            d["value"] = refs[c.claim_id]
-            d["text"] = (f"Reference for control: the unmodified repository's mean {refs[c.claim_id]:.2f} "
-                         f"(the paper prints {c.value_text})")
-        claims.append(d)
+    claims = [c for c in _variant_claims(parent, refs) if not only_claims or c["claim_id"] in only_claims]
     (vdir / "claims.json").write_text(json.dumps(claims, indent=1, ensure_ascii=False), encoding="utf-8")
     meta = {
         "paper_id": variant_id, "parent": parent_id, "title": f"{parent.title} [{kind} control]",

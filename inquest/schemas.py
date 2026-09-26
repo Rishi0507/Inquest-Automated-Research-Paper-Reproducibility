@@ -44,6 +44,7 @@ class Claim(BaseModel):
     source: PDFSpan
     entrypoint: Optional[str] = None
     origin: Literal["hand", "extracted"] = "hand"                 # extension
+    protocol: Optional[str] = None                                # extension: evaluation protocol, for the ledger
 
 
 class MetricSpec(BaseModel):

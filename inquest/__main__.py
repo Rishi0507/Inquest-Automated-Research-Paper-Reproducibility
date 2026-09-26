@@ -60,6 +60,9 @@ def main(argv: list[str] | None = None) -> int:
     p = sub.add_parser("eval", help="run evaluation experiments E1 to E7")
     p.add_argument("which", nargs="?", default="all")
 
+    p = sub.add_parser("image", help="build the pinned container image for the docker sandbox")
+    p.add_argument("paper")
+
     p = sub.add_parser("dossier", help="export the evidence dossier as PDF")
     p.add_argument("paper")
 
@@ -98,6 +101,15 @@ def main(argv: list[str] | None = None) -> int:
     elif args.cmd == "eval":
         from . import evaluate
         return evaluate.cli(args.which)
+    elif args.cmd == "image":
+        from . import corpus, sandbox, store
+        paper = corpus.get(args.paper)
+        env_dir = paper.dir if paper.source == "corpus" else paper.dir
+        digest = sandbox.build_image(paper.env_id, env_dir)
+        adapter = paper.adapter()
+        store.put_adapter(paper.paper_id, adapter.model_copy(update={"image": digest}).model_dump(),
+                          paper.adapter_origin() or "hand")
+        print(digest)
     elif args.cmd == "dossier":
         from . import dossier
         print(dossier.export(args.paper))

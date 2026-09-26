@@ -43,6 +43,8 @@ class ExtractedClaim(BaseModel):
     table: Optional[str] = Field(default=None, description="e.g. Table 2, when the value is in a table")
     row_label: str = Field(description="the row label or subject words that identify the value")
     column_label: str = Field(description="the column header or metric words that identify the value")
+    protocol: Optional[str] = Field(default=None, description="evaluation protocol in a few words, e.g. public "
+                                    "split, random splits, 10-fold cross-validation")
     is_proposed_method: bool = Field(description="true when the number is the paper's own method, false for "
                                                  "baselines and numbers cited from other work")
 
@@ -148,7 +150,8 @@ def extract(paper_id: str, pdf: Path, log: Callable[[str], None] = print) -> dic
             model=c.model, n_test=c.n_test, n_seeds_reported=c.n_runs, dispersion=disp,
             dispersion_kind=c.dispersion_kind if c.dispersion_kind in ("std", "stderr") else None,
             stated_config=stated if c.is_proposed_method else {}, procedures=ex.procedures if c.is_proposed_method else [],
-            required_params=ex.required_params if c.is_proposed_method else [], source=span, origin="extracted"))
+            required_params=ex.required_params if c.is_proposed_method else [], source=span, origin="extracted",
+            protocol=c.protocol))
     report["kept_claims"] = len(claims)
     report["kept_params"] = len(stated)
     report["span_verification_rate"] = (len(claims) / len(ex.claims)) if ex.claims else None
