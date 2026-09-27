@@ -170,15 +170,24 @@ def put_job(job_id: str, paper_id: str, kind: str, state: dict) -> None:
                   "updated=excluded.updated", (job_id, paper_id, kind, json.dumps(state), now, now))
 
 
+def _alive(state: dict) -> dict:
+    """A queued or running job whose owning process has exited is reported as interrupted."""
+    if state.get("status") in ("queued", "running") and state.get("pid"):
+        import psutil
+        if not psutil.pid_exists(state["pid"]):
+            state = {**state, "status": "interrupted", "error": state.get("error") or "the process running this job exited"}
+    return state
+
+
 def get_job(job_id: str) -> dict | None:
     r = _rows("SELECT state, paper_id, kind FROM jobs WHERE job_id=?", (job_id,))
     if not r:
         return None
-    return json.loads(r[0][0]) | {"job_id": job_id, "paper_id": r[0][1], "kind": r[0][2]}
+    return _alive(json.loads(r[0][0])) | {"job_id": job_id, "paper_id": r[0][1], "kind": r[0][2]}
 
 
 def jobs_for(paper_id: str) -> list[dict]:
-    return [json.loads(s) | {"job_id": j, "kind": k} for j, s, k in
+    return [_alive(json.loads(s)) | {"job_id": j, "kind": k} for j, s, k in
             _rows("SELECT job_id, state, kind FROM jobs WHERE paper_id=? ORDER BY created DESC LIMIT 20", (paper_id,))]
 
 

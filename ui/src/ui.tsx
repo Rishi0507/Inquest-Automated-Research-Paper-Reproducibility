@@ -63,7 +63,7 @@ export function useJob(jobId: string | null, onDone?: (j: Job) => void) {
           const j = (await r.json()) as Job;
           if (stop) return;
           setJob(j);
-          if (j.status === "done" || j.status === "failed") { done.current?.(j); return; }
+          if (j.status === "done" || j.status === "failed" || j.status === "interrupted") { done.current?.(j); return; }
         }
       } catch { /* retry on the next tick */ }
       if (!stop) timer = window.setTimeout(tick, 1200);

@@ -96,6 +96,36 @@ export default function Witness() {
           </div>
         </div>
 
+        {a.deviations.length > 0 && (
+          <div className="card" style={{ padding: 6 }}>
+            <div className="card-title" style={{ padding: "12px 14px 0" }}>
+              <span>Deviations</span>
+              <span className="muted small">{a.deviation_source === "hand" ? "hand-authored reference set" : "found automatically"} · a patch enters attribution only after the Witness confirms it</span>
+            </div>
+            <div className="table-wrap">
+              <table className="t">
+                <thead><tr><th>ID</th><th>Type</th><th>Parameter</th><th>Paper</th><th>Code</th><th>Evidence</th><th>Patch</th></tr></thead>
+                <tbody>
+                  {a.deviations.map((d) => (
+                    <tr key={d.dev_id}>
+                      <td className="mono muted">{d.dev_id}</td>
+                      <td className="small">{d.type.toLowerCase().replace(/_/g, " ")}<div className="muted">{d.phase} phase</div></td>
+                      <td>{d.label || d.param}</td>
+                      <td className="small">{show(d.paper_value)}</td>
+                      <td className="small">{show(d.repo_value)}</td>
+                      <td className="small mono">{d.code_ref ?? ""}{d.witness_idx !== null && d.witness_idx !== undefined ? <span className="muted"> #{d.witness_idx}</span> : null}</td>
+                      <td className="small">
+                        <span className={`tag ${d.patch_verified ? "v-good" : "v-neutral"}`}><span className="dot" />{d.patch_verified ? "verified" : "not verified"}</span>
+                        {d.note && <div className="muted" style={{ marginTop: 4, maxWidth: 360 }}>{d.note}</div>}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
         {a.witness.map((w, i) => (
           <div key={i} className="card">
             <div className="card-title"><span>Metric provenance</span><span className="muted small mono">{Object.keys(w.config).length ? JSON.stringify(w.config) : "repository defaults"}</span></div>
