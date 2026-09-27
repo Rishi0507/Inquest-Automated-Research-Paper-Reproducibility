@@ -117,6 +117,7 @@ class Deviation(BaseModel):
     source: Literal["hand", "witness", "ast", "llm"] = "hand"   # extension
     note: Optional[str] = None                        # extension
     alternatives: list[Scalar] = []                   # extension: sweep values for C14
+    observed: dict[str, Scalar] = {}                  # extension: configuration -> observed value; empty = all
 
 
 class RunRequest(BaseModel):

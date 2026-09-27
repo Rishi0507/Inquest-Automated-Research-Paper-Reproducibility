@@ -73,7 +73,7 @@ def expectations(dev: Deviation, adapter, baseline_args: dict | None) -> list[di
         return patch["expect"]
     out = []
     for key, value in config_part(patch).items():
-        flag = adapter.flags.get(key)
+        flag = adapter.flags.get(key) or (key if key.startswith("-") else None)
         dest = _dest_for(flag, baseline_args) if flag else None
         out.append({"kind": "ARGS", "key": dest or key, "value": value})
     for e in patch.get("code", []):

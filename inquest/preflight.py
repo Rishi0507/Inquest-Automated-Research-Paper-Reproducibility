@@ -44,12 +44,14 @@ def check_claim(claim: Claim, observed_n: Optional[int] = None) -> dict:
     src = "observed at runtime" if observed_n else "stated in the paper"
     if res is None:
         return {"test": "GRIM", "status": "silent", "n": n, "m": m, "n_source": src,
-                "reason": f"with N={n} and m={m} every value at {claim.decimals} decimals is achievable"}
+                "reason": f"with N={n} and m={m} every value printed to {claim.decimals} "
+                          f"decimal{'' if claim.decimals == 1 else 's'} is achievable"}
     if res:
         return {"test": "GRIM", "status": "pass", "n": n, "m": m, "n_source": src}
     return {"test": "GRIM", "status": "impossible", "n": n, "m": m, "n_source": src,
             "achievable": nearest_achievable(claim.value, claim.decimals, n, m),
-            "reason": f"{claim.value_text} is not a multiple of 100/({m}·{n}) at {claim.decimals} decimals"}
+            "reason": f"{claim.value_text} is not a multiple of 100/({m}·{n}) at {claim.decimals} "
+                      f"decimal{'' if claim.decimals == 1 else 's'}"}
 
 
 def dispersion_check(claim: Claim, measured_std: Optional[float]) -> Optional[dict]:

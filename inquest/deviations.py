@@ -71,13 +71,19 @@ def _observed_args(summary: dict) -> dict:
 
 
 def _dest_to_config_key(adapter, summary: dict) -> dict[str, str]:
-    """argparse dest -> adapter config key, through the flag both share."""
+    """argparse dest -> config key: the adapter's key when it maps the flag, otherwise the
+    long flag observed by the Witness (valued options only; switches keep their adapter key)."""
     out = {}
     actions = (summary.get("args") or {}).get("actions", [])
     for key, flag in adapter.flags.items():
         for a in actions:
             if flag in a.get("flags", []):
                 out[a["dest"]] = key
+    for a in actions:
+        if a["dest"] not in out and not a.get("store_true"):
+            long = [f for f in a.get("flags", []) if f.startswith("--")]
+            if long:
+                out[a["dest"]] = long[0]
     return out
 
 
@@ -272,11 +278,21 @@ def find(paper_id: str, claims: list[Claim], analysis: dict, log: Callable[[str]
     current_cfg: dict = {}
 
     def add(**kw) -> Deviation:
-        """Record a deviation once, however many configurations show it."""
+        """Record a deviation once per fix. The same fix seen in several configurations is one
+        deviation that remembers where it was observed and with which value."""
+        from .runner import canonical
+        cfg_key = canonical(current_cfg)
+        patch_key = json.dumps(kw.get("patch", {}), sort_keys=True, default=str)
         for d in devs:
-            if d.type == kw["type"] and d.param == kw["param"] and str(d.repo_value) == str(kw.get("repo_value")):
+            if d.type == kw["type"] and d.param == kw["param"] and                     json.dumps(d.patch, sort_keys=True, default=str) == patch_key:
+                d.observed[cfg_key] = kw.get("repo_value")
+                values = sorted({str(v) for v in d.observed.values()})
+                if len(values) > 1:
+                    d.repo_value = ", ".join(values)
+                    d.label = f"{d.param} {' / '.join(values)} against {d.paper_value}"
                 return d
         d = Deviation(dev_id=f"f{len(devs) + 1}", **kw)
+        d.observed = {cfg_key: kw.get("repo_value")}
         devs.append(d)
         origin[d.dev_id] = current_cfg
         return d
