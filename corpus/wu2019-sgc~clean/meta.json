@@ -1,0 +1,18 @@
+{
+  "paper_id": "wu2019-sgc~clean",
+  "parent": "wu2019-sgc",
+  "title": "Simplifying Graph Convolutional Networks [clean control]",
+  "authors": "Felix Wu, Tianyi Zhang, Amauri Holanda de Souza Jr., Christopher Fifty, Tao Yu, Kilian Q. Weinberger",
+  "venue": "ICML 2019",
+  "arxiv": "1902.07153v2",
+  "paper_date": "2019-06-20",
+  "repo_url": "https://github.com/Tiiiger/SGC",
+  "repo_sha": "2c7a2727e82e462d8ef9d6e57f0b08888e16488f",
+  "provenance": "author",
+  "role": "control",
+  "variant_kind": "clean",
+  "deviation_source": "finder",
+  "control_note": "Disclosed control. Claim values are the unmodified repository's measured means, so any gap comes from the variant itself.",
+  "created": 1789997582.0613508,
+  "fault_hash": "clean"
+}

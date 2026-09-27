@@ -1,14 +1,14 @@
 [
  {
   "claim_id": "C-01",
-  "text": "SGC reaches 81.0% test accuracy on Cora, averaged over 10 runs (Table 2)",
+  "text": "Reference for control: the unmodified repository's mean 81.015 (the paper prints 81.0)",
   "metric": "accuracy",
-  "value": 81.0,
+  "value": 81.015,
   "value_text": "81.0",
-  "decimals": 1,
+  "decimals": 3,
   "dataset": "Cora",
   "model": "SGC",
-  "n_test": 1000,
+  "n_test": null,
   "n_seeds_reported": 10,
   "dispersion": 0.0,
   "dispersion_kind": "std",
@@ -131,19 +131,20 @@
    "section": "5.1",
    "text": "81.0 ± 0.0"
   },
+  "entrypoint": null,
   "origin": "hand",
   "protocol": "public split"
  },
  {
   "claim_id": "C-02",
-  "text": "SGC reaches 71.9% test accuracy on Citeseer, averaged over 10 runs (Table 2)",
+  "text": "Reference for control: the unmodified repository's mean 71.840 (the paper prints 71.9)",
   "metric": "accuracy",
-  "value": 71.9,
+  "value": 71.84,
   "value_text": "71.9",
-  "decimals": 1,
+  "decimals": 3,
   "dataset": "Citeseer",
   "model": "SGC",
-  "n_test": 1000,
+  "n_test": null,
   "n_seeds_reported": 10,
   "dispersion": 0.1,
   "dispersion_kind": "std",
@@ -266,19 +267,20 @@
    "section": "5.1",
    "text": "71.9 ± 0.1"
   },
+  "entrypoint": null,
   "origin": "hand",
   "protocol": "public split"
  },
  {
   "claim_id": "C-03",
-  "text": "SGC reaches 78.9% test accuracy on Pubmed, averaged over 10 runs (Table 2)",
+  "text": "Reference for control: the unmodified repository's mean 78.955 (the paper prints 78.9)",
   "metric": "accuracy",
-  "value": 78.9,
+  "value": 78.955,
   "value_text": "78.9",
-  "decimals": 1,
+  "decimals": 3,
   "dataset": "Pubmed",
   "model": "SGC",
-  "n_test": 1000,
+  "n_test": null,
   "n_seeds_reported": 10,
   "dispersion": 0.0,
   "dispersion_kind": "std",
@@ -401,6 +403,7 @@
    "section": "5.1",
    "text": "78.9 ± 0.0"
   },
+  "entrypoint": null,
   "origin": "hand",
   "protocol": "public split"
  },
@@ -443,6 +446,7 @@
    "section": "5.1",
    "text": "81.4 ± 0.4"
   },
+  "entrypoint": null,
   "origin": "hand",
   "protocol": "public split"
  },
@@ -485,6 +489,7 @@
    "section": "5.1",
    "text": "82.5 ± 0.7"
   },
+  "entrypoint": null,
   "origin": "hand",
   "protocol": "public split"
  }

@@ -1,14 +1,14 @@
 [
  {
   "claim_id": "C-01",
-  "text": "GCN reaches 81.5% test accuracy on Cora (Table 2, mean of 100 runs)",
+  "text": "Reference for control: the unmodified repository's mean 83.200 (the paper prints 81.5)",
   "metric": "accuracy",
-  "value": 81.5,
+  "value": 83.2,
   "value_text": "81.5",
-  "decimals": 1,
+  "decimals": 3,
   "dataset": "Cora",
   "model": "GCN",
-  "n_test": 1000,
+  "n_test": null,
   "n_seeds_reported": 100,
   "dispersion": null,
   "dispersion_kind": null,
@@ -261,6 +261,7 @@
    "section": "6.1",
    "text": "81.5"
   },
+  "entrypoint": null,
   "origin": "hand",
   "protocol": "public split"
  },
@@ -526,6 +527,7 @@
    "section": "6.1",
    "text": "70.3"
   },
+  "entrypoint": null,
   "origin": "hand",
   "protocol": "public split"
  },
@@ -791,6 +793,7 @@
    "section": "6.1",
    "text": "79.0"
   },
+  "entrypoint": null,
   "origin": "hand",
   "protocol": "public split"
  },
@@ -1057,6 +1060,7 @@
    "section": "6.1",
    "text": "80.1 ± 0.5"
   },
+  "entrypoint": null,
   "origin": "hand",
   "protocol": "random splits"
  }

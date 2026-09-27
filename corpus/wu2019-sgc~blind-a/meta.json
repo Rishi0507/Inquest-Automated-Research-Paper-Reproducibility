@@ -1,0 +1,19 @@
+{
+  "paper_id": "wu2019-sgc~blind-a",
+  "parent": "wu2019-sgc",
+  "title": "Simplifying Graph Convolutional Networks [planted control]",
+  "authors": "Felix Wu, Tianyi Zhang, Amauri Holanda de Souza Jr., Christopher Fifty, Tao Yu, Kilian Q. Weinberger",
+  "venue": "ICML 2019",
+  "arxiv": "1902.07153v2",
+  "paper_date": "2019-06-20",
+  "repo_url": "https://github.com/Tiiiger/SGC",
+  "repo_sha": "2c7a2727e82e462d8ef9d6e57f0b08888e16488f",
+  "provenance": "author",
+  "role": "control",
+  "variant_kind": "planted",
+  "deviation_source": "finder",
+  "control_note": "Disclosed control. Claim values are the unmodified repository's measured means, so any gap comes from the variant itself.",
+  "created": 1789997571.3375082,
+  "sealed_manifest_sha256": "7239b398e58b2b04e5a4a4853d474fe65eb4d9c4471d15744046fea018056bdb",
+  "fault_hash": "7239b398e58b2b04"
+}

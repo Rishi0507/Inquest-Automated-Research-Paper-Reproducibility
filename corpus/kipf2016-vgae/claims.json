@@ -198,7 +198,8 @@
    "section": "2",
    "text": "91.4 ± 0.01"
   },
-  "origin": "hand"
+  "origin": "hand",
+  "protocol": "85/5/10 edge split"
  },
  {
   "claim_id": "C-02",
@@ -399,7 +400,8 @@
    "section": "2",
    "text": "92.6 ± 0.01"
   },
-  "origin": "hand"
+  "origin": "hand",
+  "protocol": "85/5/10 edge split"
  },
  {
   "claim_id": "C-03",
@@ -600,7 +602,8 @@
    "section": "2",
    "text": "90.8 ± 0.02"
   },
-  "origin": "hand"
+  "origin": "hand",
+  "protocol": "85/5/10 edge split"
  },
  {
   "claim_id": "C-04",
@@ -801,7 +804,8 @@
    "section": "2",
    "text": "92.0 ± 0.02"
   },
-  "origin": "hand"
+  "origin": "hand",
+  "protocol": "85/5/10 edge split"
  },
  {
   "claim_id": "C-05",
@@ -1002,7 +1006,8 @@
    "section": "2",
    "text": "94.4 ± 0.02"
   },
-  "origin": "hand"
+  "origin": "hand",
+  "protocol": "85/5/10 edge split"
  },
  {
   "claim_id": "C-06",
@@ -1203,7 +1208,8 @@
    "section": "2",
    "text": "91.0 ± 0.02"
   },
-  "origin": "hand"
+  "origin": "hand",
+  "protocol": "85/5/10 edge split"
  },
  {
   "claim_id": "C-07",
@@ -1404,6 +1410,7 @@
    "section": "2",
    "text": "92.0 ± 0.03"
   },
-  "origin": "hand"
+  "origin": "hand",
+  "protocol": "85/5/10 edge split"
  }
 ]
