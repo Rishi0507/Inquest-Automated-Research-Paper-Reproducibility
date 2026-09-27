@@ -72,10 +72,11 @@ def waterfall(info: dict, title: str, path: Path) -> Path:
         color = NEUTRAL if s["is_noise"] else (SERIES if width * att["gap"] >= 0 else NEG)
         ax.barh(y[i], width, left=cur, height=0.56, color=color, zorder=3)
         lo, hi = s["ci"]
-        ax.errorbar(cur + width, y[i], xerr=[[width - lo], [hi - width]] if width >= lo else None, fmt="none",
+        ax.errorbar(cur + width, y[i], xerr=[[max(0.0, width - lo)], [max(0.0, hi - width)]], fmt="none",
                     ecolor=INK_2, elinewidth=0.9, capsize=2.5, zorder=4)
         frac = f"  {s['fraction']:.0%}" if s.get("fraction") is not None else ""
-        ax.text(max(cur, cur + width) + abs(att["gap"]) * 0.03, y[i], f"{width:+.2f}{frac}", va="center",
+        span = max(abs(att["gap"]), max(abs(x["points"]) for x in shares), 0.1)
+        ax.text(max(cur, cur + width, cur + hi) + span * 0.04, y[i], f"{width:+.2f}{frac}", va="center",
                 fontsize=8, color=INK_2)
         cur += width
     res = att["residual"]

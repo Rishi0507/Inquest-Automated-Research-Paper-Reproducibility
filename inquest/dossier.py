@@ -120,7 +120,7 @@ def build_html(paper_id: str, image_dir: Path | None = None) -> str:
             for kind in ("histogram", "waterfall"):
                 img = image_dir / f"{cid}_{kind}.png"
                 if img.exists():
-                    parts.append(f"<img src='{img.name}'/>")
+                    parts.append(f"<p><img src='{img.name}' width='480'/></p>")
         att = info.get("attribution")
         if att:
             parts.append(f"<h3>Attribution</h3><p>Gap {att['gap']:+.2f} points against the repository as-is "

@@ -95,7 +95,8 @@ def build_command(adapter: AdapterSpec, cfg: dict, seed: int | None) -> list[str
     for key, value in cfg.items():
         if key in used:
             continue
-        flag = adapter.flags.get(key)
+        # A key may also be a command-line flag itself, as observed by the Witness in argparse.
+        flag = adapter.flags.get(key) or (key if key.startswith("-") else None)
         if not flag:
             raise ValueError(f"config key {key!r} has no command-line flag in the adapter")
         kind = adapter.config_types.get(key, "")

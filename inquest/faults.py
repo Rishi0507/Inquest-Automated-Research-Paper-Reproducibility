@@ -92,16 +92,20 @@ def _variant_claims(parent: corpus.Paper, refs: dict[str, float]) -> list[dict]:
 def refresh_claims(variant_id: str) -> None:
     """Rewrite a variant's claims from its parent with current reference values (cached runs)."""
     v = corpus.get(variant_id)
-    claims = _variant_claims(corpus.get(v.parent_id), reference_values(v.parent_id))
+    keep = {c.claim_id for c in v.hand_claims()}
+    claims = [c for c in _variant_claims(corpus.get(v.parent_id), reference_values(v.parent_id))
+              if c["claim_id"] in keep]
     (v.dir / "claims.json").write_text(json.dumps(claims, indent=1, ensure_ascii=False), encoding="utf-8")
 
 
-def reference_values(parent_id: str, n: int = 20) -> dict[str, float]:
+def reference_values(parent_id: str, n: int = 20, only_claims: list[str] | None = None) -> dict[str, float]:
     """The parent repository's measured mean per mapped claim over seeds 0..n-1 (cached runs)."""
     parent = corpus.get(parent_id)
     adapter = parent.adapter()
     out = {}
     for c in parent.hand_claims():
+        if only_claims and c.claim_id not in only_claims:
+            continue
         cm = adapter.claim_map.get(c.claim_id)
         if not cm or cm.status != "mapped":
             continue
@@ -137,7 +141,8 @@ def _write_variant(variant_id: str, parent_id: str, kind: str, repo_src: Path, r
     return dest
 
 
-def plant(paper_id: str, fault: str, out: str | None = None, seed: int | None = None) -> dict:
+def plant(paper_id: str, fault: str, out: str | None = None, seed: int | None = None,
+          only_claims: list[str] | None = None) -> dict:
     """Plant a fault. `fault="random"` draws one applicable kind so the analyst cannot know which."""
     applicable = [k for k, v in CATALOGUE.items() if paper_id in v]
     if fault == "random":
@@ -149,7 +154,7 @@ def plant(paper_id: str, fault: str, out: str | None = None, seed: int | None = 
     parent = corpus.get(paper_id)
     parent.ensure_repo()
     variant_id = out or f"{paper_id}~blind{int(time.time()) % 100000}"
-    refs = reference_values(paper_id)
+    refs = reference_values(paper_id, only_claims=only_claims)
     edit = {k: spec[k] for k in ("file", "find", "replace")}
     manifest = {"variant": variant_id, "parent": paper_id, "fault": fault, "edit": edit,
                 "expected": spec["expected"], "planted_at": time.time()}
@@ -158,21 +163,22 @@ def plant(paper_id: str, fault: str, out: str | None = None, seed: int | None = 
     FAULT_DIR.mkdir(parents=True, exist_ok=True)
     (FAULT_DIR / f"{variant_id}.json").write_bytes(blob)
     dest = _write_variant(variant_id, paper_id, "planted", parent.repo_path, refs,
-                          {"sealed_manifest_sha256": sealed, "fault_hash": sealed[:16]})
+                          {"sealed_manifest_sha256": sealed, "fault_hash": sealed[:16]}, only_claims)
     repos.apply_edits(dest, [edit])
     return {"variant": variant_id, "sealed_manifest_sha256": sealed}
 
 
-def clean(paper_id: str, out: str | None = None) -> dict:
+def clean(paper_id: str, out: str | None = None, only_claims: list[str] | None = None) -> dict:
     parent = corpus.get(paper_id)
     parent.ensure_repo()
     variant_id = out or f"{paper_id}~clean"
-    refs = reference_values(paper_id)
-    _write_variant(variant_id, paper_id, "clean", parent.repo_path, refs, {"fault_hash": "clean"})
+    refs = reference_values(paper_id, only_claims=only_claims)
+    _write_variant(variant_id, paper_id, "clean", parent.repo_path, refs, {"fault_hash": "clean"}, only_claims)
     return {"variant": variant_id}
 
 
-def history(paper_id: str, fix_commit: str, out: str | None = None, note: str = "") -> dict:
+def history(paper_id: str, fix_commit: str, out: str | None = None, note: str = "",
+            only_claims: list[str] | None = None) -> dict:
     """Check out the parent of a result-changing fix commit. Ground truth comes from the fix diff."""
     parent = corpus.get(paper_id)
     repo = parent.ensure_repo()
@@ -184,10 +190,10 @@ def history(paper_id: str, fix_commit: str, out: str | None = None, note: str = 
         shutil.rmtree(tmp)
     repos._git(["worktree", "add", "--force", "--detach", str(tmp), before], cwd=repo)
     try:
-        refs = reference_values(paper_id)
+        refs = reference_values(paper_id, only_claims=only_claims)
         _write_variant(variant_id, paper_id, "historical", tmp, refs,
                        {"fix_commit": fix_commit, "repo_sha_effective": before, "fault_hash": f"hist-{before[:12]}",
-                        "history_note": note})
+                        "history_note": note}, only_claims)
     finally:
         repos._git(["worktree", "remove", "--force", str(tmp)], cwd=repo)
     (FAULT_DIR).mkdir(parents=True, exist_ok=True)
@@ -240,12 +246,13 @@ def list_variants() -> list[dict]:
 
 
 def cli(args) -> int:
+    only = [c.strip() for c in args.claims.split(",")] if getattr(args, "claims", None) else None
     if args.action == "plant":
-        print(json.dumps(plant(args.paper, args.fault or "random", args.out, args.seed), indent=1))
+        print(json.dumps(plant(args.paper, args.fault or "random", args.out, args.seed, only), indent=1))
     elif args.action == "clean":
-        print(json.dumps(clean(args.paper, args.out), indent=1))
+        print(json.dumps(clean(args.paper, args.out, only), indent=1))
     elif args.action == "history":
-        print(json.dumps(history(args.paper, args.fix_commit, args.out), indent=1))
+        print(json.dumps(history(args.paper, args.fix_commit, args.out, args.note or "", only), indent=1))
     elif args.action == "reveal":
         print(json.dumps(reveal(args.out or args.paper), indent=1, default=str))
     elif args.action == "list":

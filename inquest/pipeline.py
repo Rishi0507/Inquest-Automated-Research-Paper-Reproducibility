@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import os
 import threading
 import time
 import traceback
@@ -29,7 +30,8 @@ class Job:
         self.kind = kind
         self.state = {"status": "queued", "stage": None, "stages": {s: "pending" for s in STAGES}, "progress": 0.0,
                       "runs_done": 0, "runs_executed": 0, "cache_hits": 0, "rescores": 0, "log": [],
-                      "started": time.time(), "finished": None, "error": None, "analysis_id": None}
+                      "started": time.time(), "finished": None, "error": None, "analysis_id": None,
+                      "pid": os.getpid()}
         self._lock = threading.Lock()
         self.save()
 
@@ -82,6 +84,35 @@ def _group_claims(claims: list[Claim], adapter) -> tuple[OrderedDict, dict]:
 def _metric_of(claim: Claim, adapter) -> str:
     cm = adapter.claim_map.get(claim.claim_id)
     return (cm.metric if cm and cm.metric else claim.metric)
+
+
+def _applies(dev: Deviation, group: dict) -> bool:
+    """A deviation applies to a claim when it was observed in the claim's configuration.
+    Deviations without recorded observations (code, metric and hand-authored ones) apply to all."""
+    return not dev.observed or runner.canonical(group["config"]) in dev.observed
+
+
+def _drop_shared_with_parent(paper: corpus.Paper, devs: list[Deviation], job: "Job") -> list[Deviation]:
+    """In a control, whatever the unmodified repository already does is part of the reference.
+
+    An observation is dropped when the parent's latest analysis shows the same parameter with
+    the same value in the same configuration; a deviation with no observation left is dropped.
+    """
+    parent = store.latest_analysis(paper.parent_id) or {}
+    shared = {(d["param"], cfg, str(v)) for d in parent.get("deviations", []) for cfg, v in (d.get("observed") or {}).items()}
+    kept = []
+    for d in devs:
+        if not d.observed:
+            kept.append(d)
+            continue
+        left = {cfg: v for cfg, v in d.observed.items() if (d.param, cfg, str(v)) not in shared}
+        if not left:
+            job.log(f"{d.dev_id} {d.label}: shared with the unmodified repository, part of the reference")
+            continue
+        if len(left) < len(d.observed):
+            job.log(f"{d.dev_id} {d.label}: kept only where the unmodified repository differs")
+        kept.append(d.model_copy(update={"observed": left}))
+    return kept
 
 
 def _load_deviations(paper: corpus.Paper, source: str) -> list[Deviation]:
@@ -292,6 +323,8 @@ def _analyze(paper: corpus.Paper, job: Job, result: dict, deviation_source: Opti
         found = finder.find(pid, claims, result, log=job.log)
         store.put_deviations(pid, "finder", [d.model_dump() for d in found])
     devs = _load_deviations(paper, source)
+    if paper.parent_id:
+        devs = _drop_shared_with_parent(paper, devs, job)
     first_key = next(iter(baselines), None)
     base_cfg = groups[first_key]["config"] if first_key else {}
     eval_reuse = groups[first_key].get("eval_reuse", False) if first_key else False
@@ -325,7 +358,11 @@ def _analyze(paper: corpus.Paper, job: Job, result: dict, deviation_source: Opti
                 continue
             job.log(f"{c.claim_id}: attributing a {c.value - b.mean:+.2f}-point gap over "
                     f"{len([d for d in attributable if d.patch_verified])} verified deviations")
-            usable = [d for d in attributable if d.phase == "train" or g.get("eval_reuse")]
+            usable = [d for d in attributable if (d.phase == "train" or g.get("eval_reuse")) and _applies(d, g)]
+            if not any(d.patch_verified and d.togglable for d in usable):
+                info["attribution"] = None
+                info["attribution_note"] = "no verified deviation observed in this claim's configuration"
+                continue
             att = attribution.attribute(pid, g["config"], usable, info["metric_key"], c.value, b.std,
                                         seeds=range(k), paired=paired, m=c.n_seeds_reported or 1, progress=job.log)
             job.state["rescores"] += att.rescores
@@ -361,9 +398,13 @@ def _analyze(paper: corpus.Paper, job: Job, result: dict, deviation_source: Opti
             if not sweepable:
                 info["sci"] = spec.sci(c)
                 continue
-            sw = spec.sweep(pid, g["config"], c, info["metric_key"], sweepable, b, progress=job.log)
+            relevant = [d for d in sweepable if _applies(d, g)]
+            if not relevant:
+                info["sci"] = spec.sci(c)
+                continue
+            sw = spec.sweep(pid, g["config"], c, info["metric_key"], relevant, b, progress=job.log)
             info["spec"] = sw
-            info["sci"] = spec.sci(c, sw["costs"], b.std, [d.param for d in sweepable])
+            info["sci"] = spec.sci(c, sw["costs"], b.std, [d.param for d in relevant])
     job.stage("specification", "done")
 
     _verdicts(paper, claims, result, job, runnable=True, groups=groups, det=result.get("determinism"),

@@ -56,6 +56,8 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--fix-commit")
     p.add_argument("--out")
     p.add_argument("--seed", type=int, default=None)
+    p.add_argument("--claims", default=None, help="comma-separated claim ids to keep in the control")
+    p.add_argument("--note", default=None)
 
     p = sub.add_parser("eval", help="run evaluation experiments E1 to E7")
     p.add_argument("which", nargs="?", default="all")
