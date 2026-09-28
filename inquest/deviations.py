@@ -113,6 +113,8 @@ def ast_findings(repo: Path, files: Optional[list[Path]] = None) -> list[dict]:
         except SyntaxError:
             continue
         rel = py.relative_to(repo).as_posix()
+        source = py.read_text(encoding="utf-8", errors="replace")
+        lines = source.splitlines()
         for node in ast.walk(tree):
             if not isinstance(node, ast.Call):
                 continue
@@ -135,8 +137,11 @@ def ast_findings(repo: Path, files: Optional[list[Path]] = None) -> list[dict]:
             elif fn in ("Adam", "AdamW", "SGD", "RMSprop", "Adagrad"):
                 for k in ("lr", "weight_decay", "momentum"):
                     if k in kw and isinstance(kw[k], ast.Constant):
-                        out.append({"kind": "optimizer_literal", "fn": fn, "key": k, "value": kw[k].value,
-                                    "code_ref": where})
+                        lit = kw[k]
+                        out.append({"kind": "optimizer_literal", "fn": fn, "key": k, "value": lit.value,
+                                    "code_ref": f"{rel}:{lit.lineno}", "file": rel,
+                                    "line_text": lines[lit.lineno - 1] if lit.lineno <= len(lines) else "",
+                                    "segment": ast.get_source_segment(source, lit)})
     return out
 
 
@@ -429,17 +434,40 @@ def find(paper_id: str, claims: list[Claim], analysis: dict, log: Callable[[str]
     # 4. code patches for deviations no configuration flag can express, or whose flag
     #    does not change what the Witness observes
     from . import patches as patching
+    literals = [f for f in ast_findings(repo) if f["kind"] == "optimizer_literal"]
     for i, d in enumerate(devs):
         base_cfg = origin.get(d.dev_id, witness[0].get("config", {}))
         if d.phase != "train" or d.type == "UNSPECIFIED_IN_PAPER":
             continue
+        expect = list(d.patch.get("expect", []))
+        reason = ""
         if d.patch:
             checked = patching.verify(paper_id, base_cfg, d)
             if checked.patch_verified:
                 devs[i] = d = checked
                 continue
+            reason = f"Setting the flag does not change what the Witness observes ({checked.note})."
             log(f"{d.dev_id}: configuration patch did not change the observation ({checked.note})")
             d.patch = {}
+        # A literal in the optimizer call that the Witness saw take effect can be replaced
+        # mechanically: the AST gives its exact source and location.
+        lit = next((f for f in literals if f["key"] == d.param and _equal(f["value"], d.repo_value)
+                    and f.get("segment")), None)
+        if lit is not None and _num(d.paper_value) is not None:
+            line = lit["line_text"]
+            if line.count(lit["segment"]) == 1:
+                d.patch = {"code": [{"file": lit["file"], "find": line + "\n",
+                                     "replace": line.replace(lit["segment"], repr(float(d.paper_value))) + "\n",
+                                     "probe": d.dev_id}],
+                           "expect": expect or [{"kind": "OPTIMIZER", "key": d.param, "value": d.paper_value}]}
+                checked = patching.verify(paper_id, base_cfg, d)
+                if checked.patch_verified:
+                    checked.source = "ast"
+                    checked.note = (f"Literal {lit['segment']} at {lit['code_ref']} replaced with the stated value; "
+                                    + checked.note)
+                    devs[i] = checked
+                    continue
+                d.patch = {}
         files = []
         if d.code_ref:
             files.append(d.code_ref.split(":")[0])
@@ -449,13 +477,17 @@ def find(paper_id: str, claims: list[Claim], analysis: dict, log: Callable[[str]
                 if ".git" not in rel and rel not in files:
                     files.append(rel)
         proposal = propose_code_patch(repo, d, files, log)
+        if proposal and expect:
+            proposal["expect"] = expect + [{"kind": "PATCH_HIT", "key": d.dev_id}]
         if proposal:
             d.patch = proposal
             d.source = "llm" if d.source == "witness" else d.source
             d.note = ((d.note + " ") if d.note else "") + "Patch proposed by the language model; accepted only after verification."
         else:
             d.togglable = False
-            d.note = ((d.note + " ") if d.note else "") + "No patch expresses this deviation; reported as a finding."
+            why = ("no language model is configured to propose a code patch" if not llm.available()
+                   else "no verified code patch was found")
+            d.note = " ".join(x for x in (d.note, reason, f"Reported as a finding: {why}.") if x)
     log(f"deviation finder: {len(devs)} deviations "
         f"({sum(1 for d in devs if d.type == 'UNSPECIFIED_IN_PAPER')} unspecified in the paper)")
     return devs

@@ -117,7 +117,7 @@ def verify(paper_id: str, base_cfg: dict, dev: Deviation, eval_reuse: bool = Tru
     adapter = paper.adapter()
     if not dev.patch:
         return dev.model_copy(update={"patch_verified": False, "togglable": False,
-                                      "note": "no patch can express this deviation"})
+                                      "note": dev.note or "no patch can express this deviation"})
     if dev.phase == "eval":
         spec = dev.patch.get("metric")
         if not eval_reuse:
