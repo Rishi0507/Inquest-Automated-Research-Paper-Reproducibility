@@ -1,6 +1,7 @@
 """Measured gap attribution (component C9).
 
-Stage B  two-sided screening against the measured noise floor τ = 1.96 · s · √(2/k)
+Stage B  two-sided screening against the measured noise floor τ = 1.96 · s · √(2/k) for train-phase
+         deviations, and against the floor of the paired per-run differences for eval-phase ones
 Stage C  exact Shapley values over at most four train-phase and three eval-phase survivors
 Stage D  joint check: does the pruned set matter together?
 Stage E  bootstrap intervals over seed indices (paired when runs are deterministic) and residual
@@ -152,12 +153,23 @@ def attribute(paper_id: str, base_cfg: dict, delta: list[Deviation], metric: str
     base = ev.v(frozenset())
     full = ev.v(N) if usable else base
 
-    # Stage B: two-sided screening
+    # Stage B: two-sided screening. A train-phase deviation changes the runs, so its effect is
+    # judged against the run-to-run floor tau. An eval-phase deviation re-scores the same runs,
+    # so its effect is a paired difference with its own, usually much smaller, floor.
+    def paired_floor(a: frozenset, b: frozenset) -> float:
+        d = np.asarray(ev.per_seed(a)) - np.asarray(ev.per_seed(b))
+        return 1.96 * float(d.std(ddof=1)) / math.sqrt(len(d)) if len(d) > 1 else tau
+
     effects = {}
     for i in sorted(usable):
         first = abs(ev.v({i}) - base)
         total = abs(full - ev.v(N - {i})) if len(usable) > 1 else first
-        effects[i] = {"first_order": first, "total": total, "effect": max(first, total), "survives": max(first, total) > tau}
+        floor = tau
+        if usable[i].phase == "eval":
+            floor = max(paired_floor(frozenset({i}), frozenset()),
+                        paired_floor(N, N - {i}) if len(usable) > 1 else 0.0)
+        effects[i] = {"first_order": first, "total": total, "effect": max(first, total), "floor": floor,
+                      "survives": max(first, total) > floor}
     ranked = sorted((i for i in usable if effects[i]["survives"]), key=lambda i: -effects[i]["effect"])
     survivors = ([i for i in ranked if usable[i].phase == "train"][:MAX_TRAIN] +
                  [i for i in ranked if usable[i].phase == "eval"][:MAX_EVAL])
@@ -185,7 +197,7 @@ def attribute(paper_id: str, base_cfg: dict, delta: list[Deviation], metric: str
         lo, hi = ci[i]
         shares.append(Share(dev_id=i, label=usable[i].label or usable[i].param, points=phi[i],
                             fraction=(phi[i] / gap) if shares_valid else None, ci=(lo, hi),
-                            is_noise=abs(phi[i]) <= tau or (lo <= 0.0 <= hi)))
+                            is_noise=abs(phi[i]) <= effects[i]["floor"] or (lo <= 0.0 <= hi)))
     return Attribution(
         metric=metric, reported=reported, base=base, full=full, aligned=aligned, gap=gap, tau=tau,
         seed_std=seed_std, k=k, paired=paired, effects=effects, survivors=survivors, pruned=pruned,

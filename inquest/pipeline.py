@@ -192,7 +192,7 @@ def analyze(paper_id: str, job: Optional[Job] = None, deviation_source: Optional
 
 def _analyze(paper: corpus.Paper, job: Job, result: dict, deviation_source: Optional[str], n_seeds: Optional[int]):
     pid = paper.paper_id
-    budget = paper.meta.get("analysis", {})
+    budget = paper.meta.get("analysis") or (corpus.get(paper.parent_id).meta.get("analysis", {}) if paper.parent_id else {})
     n = n_seeds or budget.get("n_seeds", swarm.DEFAULT_N)
 
     # 1. environment ------------------------------------------------------------------
