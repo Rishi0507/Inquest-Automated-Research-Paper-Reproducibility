@@ -182,3 +182,17 @@ export function useTooltip() {
   ) : null;
   return { show: (e: React.MouseEvent, text: ReactNode) => setTip({ x: e.clientX, y: e.clientY, text }), hide: () => setTip(null), node };
 }
+
+/** A scalar as a person would write it: short numbers kept, long floats to six significant digits. */
+export const scalar = (v: unknown): string => {
+  if (v === null || v === undefined) return "n/a";
+  if (typeof v === "number") return Number.isInteger(v) ? String(v) : String(Number(v.toPrecision(6)));
+  return String(v);
+};
+
+/** A run configuration as "key=value" pairs; empty means the repository's own defaults. */
+export const configLabel = (cfg: Record<string, unknown> | undefined | null): string => {
+  const entries = Object.entries(cfg ?? {}).filter(([k]) => k !== "__code__");
+  if (!entries.length) return "repository defaults";
+  return entries.map(([k, v]) => (v === true ? k : `${k}=${scalar(v)}`)).join(" · ");
+};

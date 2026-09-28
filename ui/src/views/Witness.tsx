@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { api, pdfPage, type Span } from "../api";
-import { Empty, PageHead, PaperPicker, fmt, useApp, useAsync } from "../ui";
+import { Empty, PageHead, PaperPicker, configLabel, fmt, scalar, useApp, useAsync } from "../ui";
 
 type Row = { param: string; paper: unknown; span: Span; observed: unknown; where: string | null; via: string | null; status: string };
 
 const STATUS: Record<string, string> = { match: "v-good", mismatch: "v-critical", "not observed": "v-neutral", "not comparable": "v-warning" };
-const show = (v: unknown) => (v === null || v === undefined ? "n/a" : typeof v === "number" ? String(v) : String(v));
+const show = scalar;
 
 export default function Witness() {
   const { paperId, analysisVersion, go } = useApp();
@@ -37,7 +37,7 @@ export default function Witness() {
           <div key={bi} className="card" style={{ padding: 6 }}>
             <div className="card-title" style={{ padding: "12px 14px 0" }}>
               <span>Stated against observed</span>
-              <span className="muted small mono">{Object.keys(block.config).length ? JSON.stringify(block.config) : "repository defaults"} · run {block.run_id}</span>
+              <span className="muted small">{configLabel(block.config)} · run <span className="mono">{block.run_id}</span></span>
             </div>
             <div className="table-wrap">
               <table className="t">
@@ -128,7 +128,7 @@ export default function Witness() {
 
         {a.witness.map((w, i) => (
           <div key={i} className="card">
-            <div className="card-title"><span>Metric provenance</span><span className="muted small mono">{Object.keys(w.config).length ? JSON.stringify(w.config) : "repository defaults"}</span></div>
+            <div className="card-title"><span>Metric provenance</span><span className="muted small">{configLabel(w.config)}</span></div>
             <div className="table-wrap">
               <table className="t">
                 <thead><tr><th>Function</th><th>Keywords</th><th>Call site</th><th className="num">Calls</th><th className="num">Last value</th><th>Bound to</th></tr></thead>
@@ -156,7 +156,7 @@ export default function Witness() {
             </div>
             {w.summary.optimizers.length > 0 && (
               <p className="small ink2" style={{ marginBottom: 0 }}>
-                {w.summary.optimizers.map((o) => `${o.name} constructed at ${o.caller} with lr ${String(o.lr)}, weight decay ${String(o.weight_decay)}, ${o.param_groups.length} parameter group(s)`).join("; ")}.
+                {w.summary.optimizers.map((o) => `${o.name} constructed at ${o.caller} with lr ${scalar(o.lr)}, weight decay ${scalar(o.weight_decay)}, ${o.param_groups.length} parameter group${o.param_groups.length === 1 ? "" : "s"}`).join("; ")}.
               </p>
             )}
           </div>

@@ -398,3 +398,5 @@ table.t td.num, table.t th.num { text-align: right; font-variant-numeric: tabula
 .drop:hover { border-color: var(--accent); background: var(--accent-soft); }
 .chart-scroll { overflow-x: auto; }
 @media (max-width: 720px) { .chart-scroll .chart { min-width: 660px; } }
+.grid > * { min-width: 0; }
+label.field .select { width: 100%; max-width: 100%; }
