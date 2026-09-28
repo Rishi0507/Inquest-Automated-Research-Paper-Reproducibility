@@ -84,6 +84,13 @@ def e3() -> dict:
             bad = [c for c, vd in verdicts.items() if vd not in ("REPRODUCED", "NOT_IMPLEMENTED", "UNVERIFIABLE")]
             att_named = [c for c, i in analysis["claims"].items() if (i.get("attribution") or {}).get("shares")]
             row.update({"false_positive": bool(bad or att_named), "non_reproduced_claims": bad})
+        elif v["kind"] == "historical":
+            executed = {c: vd for c, vd in verdicts.items() if analysis["claims"][c].get("values")}
+            named = {c: [s["label"] for s in (analysis["claims"][c].get("attribution") or {}).get("shares", [])
+                         if not s["is_noise"]] for c in executed}
+            row.update({"fix_commit": corpus.get(v["paper_id"]).meta.get("fix_commit"),
+                        "gap_detected": {c: vd != "REPRODUCED" for c, vd in executed.items()},
+                        "attributed_to": named})
         elif v["kind"] == "planted":
             rev = v.get("revealed") or faults.reveal(v["paper_id"])
             out = rev["outcome"]
@@ -136,17 +143,27 @@ def e4(pool: list[float]) -> dict:
 
 
 def e5(pool: list[float], reported: float, tolerance: float = 0.5) -> dict:
-    """How often two single runs disagree on 'reproduced within ±tolerance'."""
+    """How often two single runs disagree on "reproduced within +/- tolerance".
+
+    Measured against the paper's value and against the pool's own mean, the case in which a
+    claim is exactly what the code produces on average.
+    """
     rng = np.random.default_rng(5)
     pool_a = np.asarray(pool)
-    flips, trials = 0, 5000
-    for _ in range(trials):
-        a, b = rng.choice(pool_a, size=2, replace=False)
-        flips += (abs(a - reported) <= tolerance) != (abs(b - reported) <= tolerance)
+    mean = float(pool_a.mean())
     band = swarm.band(pool, 1)
-    return {"experiment": "E5", "reported": reported, "tolerance": tolerance, "flip_rate": flips / trials,
-            "pool_mean": float(np.mean(pool)), "pool_std": float(np.std(pool, ddof=1)),
-            "band_verdict": "REPRODUCED" if band.lo <= reported <= band.hi else "NOT_REPRODUCED"}
+    rows = []
+    for label, ref in (("paper value", reported), ("code's own mean", mean)):
+        flips, passes, trials = 0, 0, 5000
+        for _ in range(trials):
+            a, b = rng.choice(pool_a, size=2, replace=False)
+            pa, pb = abs(a - ref) <= tolerance, abs(b - ref) <= tolerance
+            flips += pa != pb
+            passes += pa
+        rows.append({"reference": label, "value": ref, "flip_rate": flips / trials, "pass_rate": passes / trials,
+                     "band_verdict": "REPRODUCED" if band.lo <= ref <= band.hi else "NOT_REPRODUCED"})
+    return {"experiment": "E5", "tolerance": tolerance, "rows": rows, "pool_mean": mean,
+            "pool_std": float(pool_a.std(ddof=1)), "pool_size": len(pool)}
 
 
 def e6() -> dict:
@@ -214,6 +231,10 @@ def markdown(r: dict) -> str:
         lines.append(f"| E3 planted faults | top-1 accuracy {_pct(r['E3']['top1_accuracy'])}; clean-control false "
                      f"positives {_pct(r['E3']['false_positive_rate'])} |")
         for row in r["E3"]["rows"]:
+            if row.get("kind") == "historical":
+                det = ", ".join(f"{c} {'gap detected' if g else 'no gap'}" for c, g in row.get("gap_detected", {}).items())
+                att = "; ".join(f"{c}: {', '.join(n) or 'unexplained'}" for c, n in row.get("attributed_to", {}).items())
+                lines.append(f"| E3 historical fault, {row['variant']} | {det or 'not analysed'}; attribution: {att or 'n/a'} |")
             for e in row.get("share_errors", []):
                 lines.append(f"| E3 share error, {row['variant']} {e['claim']} | Shapley {e['shapley']:+.2f} against "
                              f"single-fault effect {e['single_fault_effect']:+.2f} (error {e['abs_error']:.2f}) |")
@@ -223,8 +244,11 @@ def markdown(r: dict) -> str:
                          f" silent {_pct(row['silent_rate'])} |")
     if "E5" in r:
         e = r["E5"]
-        lines.append(f"| E5 single-run fragility | {_pct(e['flip_rate'])} of single-run verdicts flip at ±{e['tolerance']} "
-                     f"(pool mean {e['pool_mean']:.2f}, sd {e['pool_std']:.2f}) |")
+        for row in e["rows"]:
+            lines.append(f"| E5 single-run fragility, against the {row['reference']} ({row['value']:.2f}) | "
+                         f"{_pct(row['flip_rate'])} of pairs of single runs disagree at +/-{e['tolerance']}; a single run "
+                         f"passes {_pct(row['pass_rate'])} of the time; the band verdict is "
+                         f"{row['band_verdict'].lower().replace('_', ' ')} |")
     if "E6" in r:
         t = r["E6"]["totals"]
         lines.append(f"| E6 cost | {t.get('runs_requested', 0)} runs requested, {t.get('runs_executed', 0)} executed, "

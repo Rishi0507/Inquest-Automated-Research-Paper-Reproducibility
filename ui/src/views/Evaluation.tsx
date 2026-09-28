@@ -57,7 +57,7 @@ export default function Evaluation() {
                 {(r.E3?.rows ?? []).map((x: any) => (
                   <tr key={x.variant}>
                     <td className="mono small">{x.variant}</td><td>{x.kind}{x.fault ? `: ${x.fault}` : ""}</td>
-                    <td className="small">{!x.analysed ? "not analysed" : x.kind === "clean" ? (x.false_positive ? "false positive" : "no fault reported") : x.top1_correct ? "ranked first" : x.detected ? "detected, not first" : "missed"}</td>
+                    <td className="small">{!x.analysed ? "not analysed" : x.kind === "clean" ? (x.false_positive ? "false positive" : "no fault reported") : x.kind === "historical" ? Object.entries(x.gap_detected ?? {}).map(([c, g]) => `${c} ${g ? "gap detected" : "no gap"}; ${(x.attributed_to?.[c] ?? []).join(", ") || "unexplained"}`).join(" / ") : x.top1_correct ? "ranked first" : x.detected ? "detected, not first" : "missed"}</td>
                     <td className="small tnum">{(x.share_errors ?? []).map((e: any) => `${e.claim}: Shapley ${fmt(e.shapley)} vs ${fmt(e.single_fault_effect)} (error ${fmt(e.abs_error)})`).join("; ") || "n/a"}</td>
                   </tr>
                 ))}
@@ -76,9 +76,13 @@ export default function Evaluation() {
             <div className="card">
               <div className="card-title">E5 · Single-run fragility</div>
               {r.E5 ? (
-                <p style={{ marginTop: 0 }}>
-                  With a tolerance of ±{r.E5.tolerance} points around the reported {r.E5.reported}, <strong>{pct(r.E5.flip_rate, 1)}</strong> of pairs of single runs disagree on whether the claim reproduced. The pooled band verdict is {r.E5.band_verdict.toLowerCase().replace("_", " ")} (mean {fmt(r.E5.pool_mean)}, sd {fmt(r.E5.pool_std)}).
-                </p>
+                <>
+                  <p className="small ink2" style={{ marginTop: 0 }}>Pool of {r.E5.pool_size} runs, mean {fmt(r.E5.pool_mean)}, sd {fmt(r.E5.pool_std)}. A single run counts as reproduced within ±{r.E5.tolerance} points.</p>
+                  <table className="t">
+                    <thead><tr><th>Reference</th><th className="num">Pairs that disagree</th><th className="num">Single run passes</th><th>Band verdict</th></tr></thead>
+                    <tbody>{r.E5.rows.map((x: any) => <tr key={x.reference}><td>{x.reference} ({fmt(x.value)})</td><td className="num">{pct(x.flip_rate, 1)}</td><td className="num">{pct(x.pass_rate, 1)}</td><td className="small">{x.band_verdict.toLowerCase().replace("_", " ")}</td></tr>)}</tbody>
+                  </table>
+                </>
               ) : <p className="muted">Not measured.</p>}
             </div>
           </div>

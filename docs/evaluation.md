@@ -42,11 +42,15 @@ planted parameter and phase.
 repositories, which contain no `train_test_split` call and no learning-rate scheduler.
 
 **Historical faults.** `faults history --fix-commit <sha>` checks out the parent of a commit
-that fixed a result-changing bug; the fix diff is the ground truth. None of the three curated
-repositories has such a commit on the code paths their claims use (SGC's recorded
-preprocessing fix concerns Reddit, whose data is not distributed with the repository), so no
-historical control is part of the curated evaluation. The command works on any repository
-that has one.
+that fixed a result-changing bug; the fix diff is the ground truth, and nobody planted it. The
+curated evaluation uses one: gae-pytorch commit `3a98122` ("fix loss function"). Before it, the
+reconstruction loss computed the negative term as `log(sigmoid(1 - x))` where
+`log(1 - sigmoid(x))` is meant. The historical control runs the parent commit on the VGAE Cora
+claims. No Witness hook observes a loss function, so this control tests whether the platform
+detects a gap it cannot attribute and labels it as unexplained rather than inventing a cause.
+The other repositories' histories were checked: SGC's recorded preprocessing fix concerns the
+Reddit dataset, which is not distributed with the repository, and gae-pytorch's later "fix"
+commit (`c0b95ca`) changes a label array whose length is always equal to the one it replaces.
 
 **Clean controls.** Unmodified copies. The expected outcome is `REPRODUCED` with no attributed
 share.
