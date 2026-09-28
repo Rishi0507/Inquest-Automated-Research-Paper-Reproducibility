@@ -20,6 +20,7 @@ from typing import Any, Callable, Optional
 from pydantic import BaseModel
 
 from . import corpus, llm
+from .runner import canonical as runner_canonical
 from .schemas import Claim, Deviation, PDFSpan
 from .witness import reader
 
@@ -360,12 +361,11 @@ def find(paper_id: str, claims: list[Claim], analysis: dict, log: Callable[[str]
                     patch={key: value} if key else {})
 
         # 1c. metric definition: claim metric against the witnessed function
-        bound = {}
-        for w in witness:
-            for mkey, src in (w.get("metric_sources") or {}).items():
-                bound[mkey] = (src, w["summary"])
+        bound = {mkey: (src, summary) for mkey, src in (block.get("metric_sources") or {}).items()}
         for c in claims:
             cm = adapter.claim_map.get(c.claim_id)
+            if cm is None or runner_canonical(cm.config) != runner_canonical(current_cfg):
+                continue  # judged in the block of its own configuration
             mkey = cm.metric if cm and cm.metric else c.metric
             want = METRIC_FUNCTIONS.get(c.metric)
             if not want or mkey not in bound:
@@ -381,7 +381,7 @@ def find(paper_id: str, claims: list[Claim], analysis: dict, log: Callable[[str]
             seen_kw = {k: str(v).strip("'\"") for k, v in call["kwargs"].items()}
             same_fn = call["name"] == fn
             same_kw = all(seen_kw.get(k) == v for k, v in kwargs.items())
-            if not (same_fn and same_kw) and not any(d.param == f"metric:{mkey}" for d in devs):
+            if not (same_fn and same_kw):
                 add(type="SEMANTIC_MISMATCH", phase="eval", param=f"metric:{mkey}", paper_value=c.metric,
                     repo_value=f"{call['name']}({', '.join(f'{k}={v}' for k, v in seen_kw.items())})",
                     paper_span=c.source, witness_idx=call["idx"], code_ref=site, source="witness",

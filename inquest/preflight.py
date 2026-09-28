@@ -64,7 +64,15 @@ def dispersion_check(claim: Claim, measured_std: Optional[float]) -> Optional[di
         return None
     m = claim.n_seeds_reported or 1
     implied = claim.dispersion * math.sqrt(m) if claim.dispersion_kind == "stderr" else claim.dispersion
-    ratio = measured_std / implied if implied > 0 else math.inf
+    if implied <= 0:
+        # A printed "± 0.0" only says the spread rounds to zero at the printed precision.
+        bound = 0.5 * 10 ** (-claim.decimals)
+        implied_max = bound * math.sqrt(m) if claim.dispersion_kind == "stderr" else bound
+        status = "consistent" if measured_std <= implied_max else "inconsistent"
+        return {"test": "dispersion", "status": status, "reported": claim.dispersion,
+                "kind": claim.dispersion_kind or "std", "implied_std": implied_max, "measured_std": measured_std,
+                "ratio": measured_std / implied_max, "note": "reported as zero; compared with the rounding bound"}
+    ratio = measured_std / implied
     status = "inconsistent" if (ratio > 3 or ratio < 1 / 3) else "consistent"
     return {"test": "dispersion", "status": status, "reported": claim.dispersion,
             "kind": claim.dispersion_kind or "std", "implied_std": implied, "measured_std": measured_std,

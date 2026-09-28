@@ -152,15 +152,26 @@ def run_by_id(run_id: str) -> dict | None:
 
 # ------------------------------------------------------------------ analyses and jobs
 
+def _finite(x: Any) -> Any:
+    """JSON has no infinities or NaN; store them as null."""
+    if isinstance(x, float):
+        return x if x == x and x not in (float("inf"), float("-inf")) else None
+    if isinstance(x, dict):
+        return {k: _finite(v) for k, v in x.items()}
+    if isinstance(x, (list, tuple)):
+        return [_finite(v) for v in x]
+    return x
+
+
 def put_analysis(analysis_id: str, paper_id: str, body: dict) -> None:
     with tx() as c:
         c.execute("INSERT OR REPLACE INTO analyses VALUES (?,?,?,?)",
-                  (analysis_id, paper_id, json.dumps(body), time.time()))
+                  (analysis_id, paper_id, json.dumps(_finite(body), default=str), time.time()))
 
 
 def latest_analysis(paper_id: str) -> dict | None:
     r = _rows("SELECT body FROM analyses WHERE paper_id=? ORDER BY created DESC LIMIT 1", (paper_id,))
-    return json.loads(r[0][0]) if r else None
+    return _finite(json.loads(r[0][0])) if r else None
 
 
 def put_job(job_id: str, paper_id: str, kind: str, state: dict) -> None:

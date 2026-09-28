@@ -109,9 +109,14 @@ def _drop_shared_with_parent(paper: corpus.Paper, devs: list[Deviation], job: "J
         if not left:
             job.log(f"{d.dev_id} {d.label}: shared with the unmodified repository, part of the reference")
             continue
+        update: dict = {"observed": left}
         if len(left) < len(d.observed):
-            job.log(f"{d.dev_id} {d.label}: kept only where the unmodified repository differs")
-        kept.append(d.model_copy(update={"observed": left}))
+            values = sorted({str(v) for v in left.values()})
+            update["repo_value"] = ", ".join(values)
+            update["label"] = f"{d.param} {' / '.join(values)} against {d.paper_value}"
+            job.log(f"{d.dev_id} {d.label}: kept only where the unmodified repository differs "
+                    f"({update['label']})")
+        kept.append(d.model_copy(update=update))
     return kept
 
 

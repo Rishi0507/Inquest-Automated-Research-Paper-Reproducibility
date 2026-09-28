@@ -43,10 +43,15 @@ class DraftFlag(BaseModel):
     type: str = Field(description="int, float, str, bool, or flag for store_true switches")
 
 
+class KeyValue(BaseModel):
+    key: str
+    value: str = Field(description="value written as text")
+
+
 class DraftClaim(BaseModel):
     claim_id: str
     status: str = Field(description="mapped, not_implemented, or unmappable")
-    config: dict[str, str] = Field(default_factory=dict, description="config key to value, as text")
+    config: list[KeyValue] = Field(default_factory=list, description="config keys and values for this claim")
     metric: Optional[str] = None
     reason: Optional[str] = None
 
@@ -59,7 +64,7 @@ class Draft(BaseModel):
     flags: list[DraftFlag]
     seed_flag: Optional[str] = None
     metrics: list[DraftMetric]
-    smoke: dict[str, str] = Field(default_factory=dict, description="config overrides for a fast smoke run, "
+    smoke: list[KeyValue] = Field(default_factory=list, description="config overrides for a fast smoke run, "
                                   "e.g. epochs 1")
     claims: list[DraftClaim]
     notes: str
@@ -137,10 +142,10 @@ def _to_adapter(paper_id: str, d: Draft, python: str) -> AdapterSpec:
         flags={f.key: f.flag for f in d.flags}, config_types=types, seed_flag=d.seed_flag,
         metrics={m.name: MetricSpec(witness_fn=m.witness_fn, stdout_regex=m.stdout_regex, scale=m.scale,
                                     rescore_fn=m.rescore_fn) for m in d.metrics},
-        pythonpath=d.pythonpath, smoke_overrides={k: typed(v, types.get(k, "str")) for k, v in d.smoke.items()},
+        pythonpath=d.pythonpath, smoke_overrides={kv.key: typed(kv.value, types.get(kv.key, "str")) for kv in d.smoke},
         claim_map={c.claim_id: ClaimMapping(status=c.status if c.status in ("mapped", "not_implemented", "unmappable")
                                             else "unmappable",
-                                            config={k: typed(v, types.get(k, "str")) for k, v in c.config.items()},
+                                            config={kv.key: typed(kv.value, types.get(kv.key, "str")) for kv in c.config},
                                             metric=c.metric, reason=c.reason) for c in d.claims},
         python=python, validated=False, validation_log=[f"Drafted by the Cartographer. {d.notes}"])
 
@@ -187,23 +192,20 @@ def validate(paper_id: str, log: Callable[[str], None] = print) -> tuple[bool, l
         if val is None or not (0.0 <= val <= (100.0 if scale == 100.0 else max(1.0, scale))):
             msgs.append(f"{cid}: metric {metric} = {val} is outside the plausible range")
             return False, msgs
-        ns = (reader.summarize(reader.load(res.witness_path)).get("args") or {}).get("namespace", {})
-        dests = {a["flags"][0]: a["dest"] for a in (reader.summarize(reader.load(res.witness_path)).get("args") or {})
-                 .get("actions", []) if a.get("flags")}
+        args = reader.summarize(reader.load(res.witness_path)).get("args") or {}
+        ns = args.get("namespace", {})
         for key, value in cm.config.items():
-            flag = adapter.flags.get(key)
-            dest = next((d for f, d in dests.items() if f == flag), None)
+            flag = adapter.flags.get(key) or (key if key.startswith("-") else None)
+            dest = next((a["dest"] for a in args.get("actions", []) if flag in a.get("flags", [])), None)
             if dest is None:
-                for a in (reader.summarize(reader.load(res.witness_path)).get("args") or {}).get("actions", []):
-                    if flag in a.get("flags", []):
-                        dest = a["dest"]
-            if dest and str(ns.get(dest)).lower() != str(value).lower():
-                try:
-                    if abs(float(ns.get(dest)) - float(value)) < 1e-12:
-                        continue
-                except (TypeError, ValueError):
-                    pass
-                msgs.append(f"{cid}: Witness shows {dest}={ns.get(dest)!r}, adapter maps {value!r}")
+                continue
+            seen = ns.get(dest)
+            try:
+                same = abs(float(seen) - float(value)) < 1e-12
+            except (TypeError, ValueError):
+                same = str(seen).lower() == str(value).lower()
+            if not same:
+                msgs.append(f"{cid}: Witness shows {dest}={seen!r}, adapter maps {value!r}")
                 return False, msgs
         msgs.append(f"{cid}: {metric} = {val:.2f}; resolved arguments match the mapping")
     return True, msgs
