@@ -204,7 +204,7 @@ def execute(req: RunRequest, timeout: int | None = None) -> RunResult:
         predictions_path=preds.get(primary), witness_path=str(run_dir / "witness.jsonl"),
         wall_seconds=round(ex.wall_seconds, 3), stdout_path=str(stdout_path), env_fingerprint=fp, cached=False,
         ok=ok, error="; ".join(errors) or None, metrics=metrics, predictions=preds, metric_sources=sources,
-        config=req.config,
+        config=req.config, hash_seed=req.hash_seed,
     )
     (run_dir / "result.json").write_text(result.model_dump_json(indent=1), encoding="utf-8")
     if ok:

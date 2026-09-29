@@ -147,6 +147,7 @@ class RunResult(BaseModel):
     predictions: dict[str, str] = {}                  # extension: metric -> npz path
     metric_sources: dict[str, str] = {}               # extension: metric -> "witness:eval.py:88" | "stdout"
     config: dict = {}                                 # extension
+    hash_seed: Optional[str] = None                   # extension: PYTHONHASHSEED override, if any
 
 
 Verdict = Literal[

@@ -73,7 +73,7 @@ def apply_edits(root: Path, edits: list[dict]) -> None:
         idx = src.index(e["find"])
         src = src[:idx] + e["replace"] + src[idx + len(e["find"]):]
         probe = e.get("probe")
-        if probe:
+        if probe and path.suffix == ".py":
             # The probe goes on its own line directly above the replacement, at the
             # indentation of the replacement's first line.
             line_start = src.rfind("\n", 0, idx) + 1
@@ -82,7 +82,12 @@ def apply_edits(root: Path, edits: list[dict]) -> None:
                 first = e["replace"].split("\n", 1)[0]
                 indent = prefix + first[:len(first) - len(first.lstrip())]
                 hit = f"{indent}__import__('sitecustomize').witness_hit({probe!r})\n"
-                src = src[:line_start] + hit + src[line_start:]
+                probed = src[:line_start] + hit + src[line_start:]
+                try:
+                    compile(probed, str(path), "exec")
+                    src = probed
+                except SyntaxError:
+                    pass  # the anchor is not a statement start (for example, inside a call); no probe
         path.write_text(src, encoding="utf-8")
 
 
