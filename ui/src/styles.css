@@ -400,3 +400,8 @@ table.t td.num, table.t th.num { text-align: right; font-variant-numeric: tabula
 @media (max-width: 720px) { .chart-scroll .chart { min-width: 660px; } }
 .grid > * { min-width: 0; }
 label.field .select { width: 100%; max-width: 100%; }
+@media (max-width: 900px) {
+  .chips { -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent); mask-image: linear-gradient(90deg, #000 85%, transparent); }
+  .topbar-inner { padding: 10px 16px; gap: 12px; }
+  .page { padding: 26px 16px 64px; }
+}

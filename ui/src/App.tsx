@@ -100,6 +100,10 @@ export default function App() {
 
   useEffect(() => { writeHash(tab, paperId, claimId); }, [tab, paperId, claimId]);
 
+  useEffect(() => {
+    document.querySelector('.chip-tab[aria-selected="true"]')?.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" });
+  }, [tab]);
+
   const ctx = useMemo(() => ({
     tab,
     go: (t: Tab, p?: string | null) => {

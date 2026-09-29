@@ -19,7 +19,7 @@ export type Verdict = {
 };
 export type Attribution = {
   metric: string; reported: number; base: number; full: number; aligned: number; gap: number; tau: number;
-  seed_std: number; k: number; paired: boolean; effects: Record<string, { first_order: number; total: number; effect: number; survives: boolean }>;
+  seed_std: number; k: number; paired: boolean; effects: Record<string, { first_order: number; total: number; effect: number; floor?: number; survives: boolean }>;
   survivors: string[]; pruned: string[]; residual: number; residual_in_noise: boolean; pruned_joint_effect: boolean;
   shares_valid: boolean; shares: Share[]; coalitions: Record<string, number[]>; trainings: number; rescores: number;
   excluded: { dev_id: string; label: string; reason: string }[];

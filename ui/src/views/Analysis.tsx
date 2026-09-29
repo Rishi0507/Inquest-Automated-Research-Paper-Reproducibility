@@ -102,7 +102,7 @@ export default function AnalysisView() {
                     <div className="card-title">Screening</div>
                     <div className="table-wrap">
                       <table className="t">
-                        <thead><tr><th>Deviation</th><th className="num">First-order</th><th className="num">Total effect</th><th>Outcome</th></tr></thead>
+                        <thead><tr><th>Deviation</th><th className="num">First-order</th><th className="num">Total effect</th><th className="num">Noise floor</th><th>Outcome</th></tr></thead>
                         <tbody>
                           {Object.entries(att.effects).map(([id, e]) => {
                             const dev = a.deviations.find((d) => d.dev_id === id);
@@ -111,12 +111,13 @@ export default function AnalysisView() {
                                 <td><span className="mono muted">{id}</span> {dev?.label ?? dev?.param}</td>
                                 <td className="num">{fmt(e.first_order)}</td>
                                 <td className="num">{fmt(e.total)}</td>
+                                <td className="num">{fmt(e.floor ?? att.tau)}{dev?.phase === "eval" ? <span className="muted small"> paired</span> : null}</td>
                                 <td>{att.survivors.includes(id) ? "survives, enters exact Shapley" : e.survives ? "survives, over the enumeration cap" : "within the noise floor"}</td>
                               </tr>
                             );
                           })}
                           {att.excluded.map((x) => (
-                            <tr key={x.dev_id}><td><span className="mono muted">{x.dev_id}</span> {x.label}</td><td className="num muted">n/a</td><td className="num muted">n/a</td><td className="muted">excluded: {x.reason}</td></tr>
+                            <tr key={x.dev_id}><td><span className="mono muted">{x.dev_id}</span> {x.label}</td><td className="num muted">n/a</td><td className="num muted">n/a</td><td className="num muted">n/a</td><td className="muted">excluded: {x.reason}</td></tr>
                           ))}
                         </tbody>
                       </table>
