@@ -151,7 +151,8 @@ class Paper:
         return {
             "paper_id": self.paper_id, "title": self.title, "authors": self.meta.get("authors"),
             "venue": self.meta.get("venue"), "arxiv": self.meta.get("arxiv"), "paper_date": self.meta.get("paper_date"),
-            "repo_url": self.repo_url, "repo_sha": self.meta.get("repo_sha"), "provenance": self.meta.get("provenance"),
+            "repo_url": self.repo_url, "repo_sha": self.meta.get("repo_sha_effective") or self.meta.get("repo_sha"),
+            "provenance": self.meta.get("provenance"),
             "provenance_note": self.meta.get("provenance_note"), "source": self.source, "parent": self.parent_id,
             "role": self.meta.get("role"), "variant_kind": self.meta.get("variant_kind"),
             "claims_source": self.claims_source, "has_hand_claims": bool(self.hand_claims()),
@@ -159,16 +160,22 @@ class Paper:
         }
 
 
+VARIANTS = config.WORKSPACE / "variants"
+
+
 def _corpus_papers() -> dict[str, Paper]:
+    """Curated papers from the corpus, and controls generated into the workspace."""
     out = {}
-    if config.CORPUS.exists():
-        for d in sorted(config.CORPUS.iterdir()):
+    for root in (config.CORPUS, VARIANTS):
+        if not root.exists():
+            continue
+        for d in sorted(root.iterdir()):
             f = d / "meta.json"
             if f.exists():
                 meta = json.loads(f.read_text(encoding="utf-8"))
                 source = "variant" if meta.get("parent") else "corpus"
                 if source == "variant":
-                    meta.setdefault("repo_path", str(config.WORKSPACE / "variants" / d.name / "repo"))
+                    meta.setdefault("repo_path", str(VARIANTS / d.name / "repo"))
                 out[meta["paper_id"]] = Paper(meta["paper_id"], meta, d, source)
     return out
 

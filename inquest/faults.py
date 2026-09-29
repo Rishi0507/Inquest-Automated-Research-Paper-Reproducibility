@@ -66,7 +66,8 @@ NOT_APPLICABLE_NOTE = {
 
 
 def _variant_dir(variant_id: str) -> Path:
-    return config.CORPUS / variant_id
+    """Controls are generated artifacts: metadata, claims and repository copy live in the workspace."""
+    return config.WORKSPACE / "variants" / variant_id
 
 
 REFERENCE_DECIMALS = 3

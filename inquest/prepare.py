@@ -18,7 +18,9 @@ def entry_script(adapter, repo: Path) -> Path | None:
 def prepare(paper_id: str, log=print, rebuild: bool = False) -> dict:
     paper = corpus.get(paper_id)
     if paper.parent_id:
-        return prepare(paper.parent_id, log=log, rebuild=rebuild)
+        log(f"control of {paper.parent_id}; repository copy at {paper.repo_sha[:12]}, parent environment")
+        return prepare(paper.parent_id, log=lambda m: None if m.startswith("repository at") else log(m),
+                       rebuild=rebuild)
     paper.ensure_pdf()
     repo = paper.ensure_repo()
     log(f"repository at {paper.meta.get('repo_sha', 'HEAD')[:12]}")

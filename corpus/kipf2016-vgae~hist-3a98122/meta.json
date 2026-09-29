@@ -1,0 +1,21 @@
+{
+  "paper_id": "kipf2016-vgae~hist-3a98122",
+  "parent": "kipf2016-vgae",
+  "title": "Variational Graph Auto-Encoders [historical control]",
+  "authors": "Thomas N. Kipf, Max Welling",
+  "venue": "NIPS 2016 Workshop on Bayesian Deep Learning",
+  "arxiv": "1611.07308v1",
+  "paper_date": "2016-11-21",
+  "repo_url": "https://github.com/zfjsail/gae-pytorch",
+  "repo_sha": "c0b95cac8eb2928d0b5d6d65fee938fe97f60262",
+  "provenance": "third_party",
+  "role": "control",
+  "variant_kind": "historical",
+  "deviation_source": "finder",
+  "control_note": "Disclosed control. Claim values are the unmodified repository's measured means, so any gap comes from the variant itself.",
+  "created": 1790008939.6423342,
+  "fix_commit": "3a98122",
+  "repo_sha_effective": "f57dad5bfaf449788eddace21e98431069c97015",
+  "fault_hash": "hist-f57dad5bfaf4",
+  "history_note": "Parent of 3a98122 (fix loss function): the negative term used log(sigmoid(1 - x)) instead of log(1 - sigmoid(x))."
+}

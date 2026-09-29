@@ -1,0 +1,19 @@
+{
+  "paper_id": "kipf2016-vgae~metric-swap",
+  "parent": "kipf2016-vgae",
+  "title": "Variational Graph Auto-Encoders [planted control]",
+  "authors": "Thomas N. Kipf, Max Welling",
+  "venue": "NIPS 2016 Workshop on Bayesian Deep Learning",
+  "arxiv": "1611.07308v1",
+  "paper_date": "2016-11-21",
+  "repo_url": "https://github.com/zfjsail/gae-pytorch",
+  "repo_sha": "c0b95cac8eb2928d0b5d6d65fee938fe97f60262",
+  "provenance": "third_party",
+  "role": "control",
+  "variant_kind": "planted",
+  "deviation_source": "finder",
+  "control_note": "Disclosed control. Claim values are the unmodified repository's measured means, so any gap comes from the variant itself.",
+  "created": 1790008942.2720268,
+  "sealed_manifest_sha256": "58b362a64bd1ed77aa750107157b42473cb9573266ff6b34277d4c4435d53081",
+  "fault_hash": "58b362a64bd1ed77"
+}
