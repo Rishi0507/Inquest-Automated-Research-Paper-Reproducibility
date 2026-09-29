@@ -148,13 +148,30 @@ when a smoke run shows the intended change in the Witness: the argument value, t
 value, or the probe firing. Deviations without a verified patch are reported as findings and
 never enter attribution.
 
+Patches come from three sources, tried in order. A configuration flag is used when the Witness
+shows that setting it changes the observation. When the observation comes from a literal in an
+optimizer call (for example a hardcoded weight decay that overrides the flag), the AST gives the
+literal's exact source and line, and it is replaced with the stated value. Otherwise the language
+model proposes find and replace edits. Every patch, whatever its source, keeps the observation
+that evidenced the deviation as its expectation, so a code patch is accepted only when the
+Witness sees the intended value, not merely when the patched line runs.
+
+Each deviation records the configurations it was observed in and the value observed in each.
+Attribution and the specification sweep for a claim use only deviations observed in that
+claim's configuration, plus those that apply everywhere (code, metric and hand-authored
+patches). In a control, an observation the unmodified repository shares is part of the
+reference and is excluded.
+
 ## Attribution
 
 1. The repository as-is and the fully aligned configuration are evaluated over the same seed
    set (three seeds, paired, when repeated runs agree; five seeds, unpaired, otherwise).
-2. Each deviation's first-order effect and total effect are compared with the noise floor
-   `tau = 1.96 * s * sqrt(2 / k)`, where `s` is the seed standard deviation measured by the
-   swarm.
+2. Each deviation's first-order effect and total effect are compared with a noise floor. For a
+   train-phase deviation it is `tau = 1.96 * s * sqrt(2 / k)`, where `s` is the seed standard
+   deviation measured by the swarm. An eval-phase deviation re-scores the same runs, so its
+   effect is a paired difference and its floor is `1.96 * sd(d) / sqrt(k)`, where `d` are the
+   per-run differences. Without this, a metric-definition change in a noisy repository would be
+   screened out by run-to-run variance it is not subject to.
 3. Exact Shapley values are computed over at most four train-phase and three eval-phase
    survivors. Eval-phase coalitions re-score captured predictions and cost no training.
 4. The joint check evaluates whether pruned deviations matter together.

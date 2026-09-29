@@ -19,8 +19,10 @@ not run are marked as such rather than filled in.
 
 ## Controls
 
-Controls are variant papers created from a curated paper. They share its PDF, stated
-parameters and environment. Their claim values are replaced by the unmodified repository's
+Controls are variant papers created from a curated paper and written into the workspace
+(`.inquest/variants/<id>/`, with the metadata, claims and the modified repository copy). They
+are generated artifacts and are recreated with the commands below. They share the curated
+paper's PDF, stated parameters and environment. Their claim values are replaced by the unmodified repository's
 mean over seeds 0 to 19, so any gap a control shows comes from the control itself. The claim
 text in each control says so, and every dossier of a control carries the same note.
 
@@ -54,6 +56,25 @@ commit (`c0b95ca`) changes a label array whose length is always equal to the one
 
 **Clean controls.** Unmodified copies. The expected outcome is `REPRODUCED` with no attributed
 share.
+
+## Recreating the controls
+
+The evaluation uses these controls. Blind plants draw their fault from the seeded random
+generator, so the same seed selects the same fault without the operator choosing it.
+
+```bash
+python -m inquest faults plant --paper wu2019-sgc --fault random --seed 7 --out wu2019-sgc~blind-a
+python -m inquest faults plant --paper kipf2017-gcn --fault random --seed 11 --out kipf2017-gcn~blind-b
+python -m inquest faults plant --paper wu2019-sgc --fault metric_swap --out wu2019-sgc~metric-swap
+python -m inquest faults plant --paper kipf2016-vgae --fault metric_swap --out kipf2016-vgae~metric-swap --claims C-01,C-02
+python -m inquest faults history --paper kipf2016-vgae --fix-commit 3a98122 --out kipf2016-vgae~hist-3a98122 --claims C-01,C-02
+python -m inquest faults clean --paper wu2019-sgc
+python -m inquest faults clean --paper kipf2017-gcn
+```
+
+Each control is then analysed with `python -m inquest analyze <id>` after its parent, because
+a control excludes deviations its parent's latest analysis already shows. The VGAE controls are
+limited to the Cora claims because a VGAE run takes 150 to 330 seconds on the reference CPU.
 
 ## Unplanted cases
 

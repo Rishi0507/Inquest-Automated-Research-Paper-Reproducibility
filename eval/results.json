@@ -1,0 +1,54 @@
+{
+ "generated": "2026-09-21 19:58:25",
+ "llm": {
+  "anthropic": false,
+  "model": "claude-opus-5",
+  "local": false,
+  "local_model": null
+ },
+ "E4": {
+  "experiment": "E4",
+  "pool_size": 60,
+  "rows": [
+   {
+    "k": 1,
+    "lower_bound_coverage": 0.9825,
+    "silent_rate": 1.0
+   },
+   {
+    "k": 5,
+    "lower_bound_coverage": 0.982,
+    "silent_rate": 1.0
+   },
+   {
+    "k": 20,
+    "lower_bound_coverage": 0.999,
+    "silent_rate": 1.0
+   }
+  ],
+  "note": "Coverage is measured against the empirical tail probability of the pooled runs."
+ },
+ "E5": {
+  "experiment": "E5",
+  "tolerance": 0.5,
+  "rows": [
+   {
+    "reference": "paper value",
+    "value": 81.5,
+    "flip_rate": 0.1542,
+    "pass_rate": 0.0802,
+    "band_verdict": "REPRODUCED"
+   },
+   {
+    "reference": "code's own mean",
+    "value": 83.04833333333333,
+    "flip_rate": 0.5152,
+    "pass_rate": 0.4868,
+    "band_verdict": "REPRODUCED"
+   }
+  ],
+  "pool_mean": 83.04833333333333,
+  "pool_std": 0.8166678196694275,
+  "pool_size": 60
+ }
+}
