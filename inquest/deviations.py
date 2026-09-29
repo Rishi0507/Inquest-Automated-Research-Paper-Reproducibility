@@ -457,8 +457,7 @@ def find(paper_id: str, claims: list[Claim], analysis: dict, log: Callable[[str]
             line = lit["line_text"]
             if line.count(lit["segment"]) == 1:
                 d.patch = {"code": [{"file": lit["file"], "find": line + "\n",
-                                     "replace": line.replace(lit["segment"], repr(float(d.paper_value))) + "\n",
-                                     "probe": d.dev_id}],
+                                     "replace": line.replace(lit["segment"], repr(float(d.paper_value))) + "\n"}],
                            "expect": expect or [{"kind": "OPTIMIZER", "key": d.param, "value": d.paper_value}]}
                 checked = patching.verify(paper_id, base_cfg, d)
                 if checked.patch_verified:

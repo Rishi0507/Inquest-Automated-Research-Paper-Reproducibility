@@ -54,8 +54,12 @@ class Paper:
 
     @cached_property
     def repo_sha(self) -> str:
+        """The commit the code under test comes from. A control's copy has no history of its own:
+        it carries its parent's pinned commit, or the checked-out commit of a historical fault."""
         if self.meta.get("repo_sha_effective"):
             return self.meta["repo_sha_effective"]
+        if self.parent_id or not (self.repo_path / ".git").exists():
+            return self.meta.get("repo_sha", "")
         try:
             return repos.head_sha(self.repo_path)
         except Exception:
