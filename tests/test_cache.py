@@ -47,5 +47,16 @@ def test_key_changes_with_environment(paper, monkeypatch, tmp_path):
     assert key(paper) != k0
 
 
+def test_control_commit_comes_from_metadata_not_an_enclosing_repository(paper, tmp_path):
+    """A control's repository copy has no history; git must not walk up to another repository."""
+    copy = tmp_path / "repo"
+    copy.mkdir()
+    meta = {**paper.meta, "parent": PAPER, "repo_path": str(copy), "repo_sha": "a" * 40}
+    control = corpus.Paper(f"{PAPER}~test", meta, tmp_path, "variant")
+    assert control.repo_sha == "a" * 40
+    historical = corpus.Paper(f"{PAPER}~hist", {**meta, "repo_sha_effective": "b" * 40}, tmp_path, "variant")
+    assert historical.repo_sha == "b" * 40
+
+
 def test_config_order_does_not_matter(paper):
     assert key(paper, config={"lr": 0.01, "epochs": 5}) == key(paper, config={"epochs": 5, "lr": 0.01})

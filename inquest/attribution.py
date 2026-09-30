@@ -124,16 +124,25 @@ class CoalitionEvaluator:
 
 def _bootstrap(survivors: list[str], ev: CoalitionEvaluator, paired: bool, B: int, rng: np.random.Generator
                ) -> dict[str, tuple[float, float]]:
+    """Seed-index bootstrap of every Shapley value.
+
+    Coalitions that share a training configuration (they differ only in eval-phase re-scoring)
+    evaluate the very same runs, so they are always resampled with one index vector. Different
+    trainings share an index vector only when runs are deterministic (paired seeds).
+    """
     k = len(ev.seeds)
     subsets = [frozenset(c) for r in range(len(survivors) + 1) for c in combinations(survivors, r)]
     arrays = {S: np.asarray(ev.per_seed(S)) for S in subsets}
+    training = {S: frozenset(i for i in S if ev.devs[i].phase == "train") for S in subsets}
+    trainings = sorted(set(training.values()), key=lambda t: sorted(t))
     draws = {i: np.empty(B) for i in survivors}
     for b in range(B):
         if paired:
-            idx = rng.integers(0, k, size=k)
-            means = {S: float(a[idx].mean()) for S, a in arrays.items()}
+            shared = rng.integers(0, k, size=k)
+            idx = {t: shared for t in trainings}
         else:
-            means = {S: float(a[rng.integers(0, k, size=k)].mean()) for S, a in arrays.items()}
+            idx = {t: rng.integers(0, k, size=k) for t in trainings}
+        means = {S: float(a[idx[training[S]]].mean()) for S, a in arrays.items()}
         phi = shapley(survivors, lambda S: means[frozenset(S)])
         for i in survivors:
             draws[i][b] = phi[i]
