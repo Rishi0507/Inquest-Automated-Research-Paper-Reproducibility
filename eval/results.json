@@ -1,5 +1,5 @@
 {
- "generated": "2026-09-21 23:53:49",
+ "generated": "2026-09-22 00:44:32",
  "llm": {
   "anthropic": false,
   "model": "claude-opus-5",
@@ -55,21 +55,36 @@
     "analysed": true,
     "verdicts": {
      "C-01": "REPRODUCED",
-     "C-02": "NOT_REPRODUCED_UNEXPLAINED"
+     "C-02": "NOT_REPRODUCED_EXPLAINED"
     },
     "fault": "metric_swap",
     "seal_intact": true,
     "detected": true,
-    "top1_correct": false,
-    "top1": [],
-    "share_errors": []
+    "top1_correct": true,
+    "top1": [
+     {
+      "claim": "C-02",
+      "top": "f1",
+      "label": "Metric definition: roc_auc_score instead of average_precision",
+      "points": 0.879394453544279,
+      "correct": true
+     }
+    ],
+    "share_errors": [
+     {
+      "claim": "C-02",
+      "shapley": 0.879394453544279,
+      "single_fault_effect": 1.0979477055639109,
+      "abs_error": 0.21855325201963183
+     }
+    ]
    },
    {
     "variant": "kipf2017-gcn~blind-b",
     "kind": "planted",
     "analysed": true,
     "verdicts": {
-     "C-01": "NOT_REPRODUCED_UNEXPLAINED",
+     "C-01": "NOT_REPRODUCED_EXPLAINED",
      "C-02": "NOT_IMPLEMENTED",
      "C-03": "NOT_IMPLEMENTED",
      "C-04": "NOT_IMPLEMENTED"
@@ -77,9 +92,24 @@
     "fault": "weight_decay_hardcoded",
     "seal_intact": true,
     "detected": true,
-    "top1_correct": false,
-    "top1": [],
-    "share_errors": []
+    "top1_correct": true,
+    "top1": [
+     {
+      "claim": "C-01",
+      "top": "f1",
+      "label": "weight_decay 0.005 (observed at the optimizer) against 0.0005",
+      "points": 39.00000000000001,
+      "correct": true
+     }
+    ],
+    "share_errors": [
+     {
+      "claim": "C-01",
+      "shapley": 39.00000000000001,
+      "single_fault_effect": 39.555,
+      "abs_error": 0.5549999999999926
+     }
+    ]
    },
    {
     "variant": "kipf2017-gcn~clean",
@@ -161,7 +191,7 @@
     "verdicts": {
      "C-01": "NOT_REPRODUCED_EXPLAINED",
      "C-02": "NOT_REPRODUCED_EXPLAINED",
-     "C-03": "NOT_REPRODUCED_UNEXPLAINED",
+     "C-03": "NOT_REPRODUCED_EXPLAINED",
      "C-04": "NOT_IMPLEMENTED",
      "C-05": "NOT_IMPLEMENTED"
     },
@@ -183,6 +213,13 @@
       "label": "Metric definition: f1_score instead of accuracy",
       "points": -0.34718134970023584,
       "correct": true
+     },
+     {
+      "claim": "C-03",
+      "top": "f1",
+      "label": "Metric definition: f1_score instead of accuracy",
+      "points": 0.056455686192421695,
+      "correct": true
      }
     ],
     "share_errors": [
@@ -197,11 +234,17 @@
       "shapley": -0.34718134970023584,
       "single_fault_effect": -0.3543735921840607,
       "abs_error": 0.007192242483824884
+     },
+     {
+      "claim": "C-03",
+      "shapley": 0.056455686192421695,
+      "single_fault_effect": 0.05933513027970605,
+      "abs_error": 0.002879444087284355
      }
     ]
    }
   ],
-  "top1_accuracy": 0.5,
+  "top1_accuracy": 1.0,
   "false_positive_rate": 0.0
  },
  "E4": {
@@ -252,9 +295,9 @@
  "E6": {
   "experiment": "E6",
   "totals": {
-   "runs_requested": 3172,
-   "runs_executed": 1681,
-   "cache_hits": 1486
+   "runs_requested": 4414,
+   "runs_executed": 1783,
+   "cache_hits": 2624
   },
   "per_analysis": [
    {
@@ -266,44 +309,12 @@
     "wall_seconds": 7521.9
    },
    {
-    "paper": "kipf2016-vgae~hist-3a98122",
-    "runs_requested": 23,
-    "runs_executed": 3,
-    "cache_hits": 20,
-    "rescores": 0,
-    "wall_seconds": 350.8
-   },
-   {
-    "paper": "kipf2016-vgae~metric-swap",
-    "runs_requested": 53,
-    "runs_executed": 23,
-    "cache_hits": 30,
-    "rescores": 5,
-    "wall_seconds": 2314.9
-   },
-   {
     "paper": "kipf2017-gcn",
     "runs_requested": 137,
     "runs_executed": 1,
     "cache_hits": 136,
     "rescores": 0,
     "wall_seconds": 28.5
-   },
-   {
-    "paper": "kipf2017-gcn~blind-b",
-    "runs_requested": 57,
-    "runs_executed": 55,
-    "cache_hits": 2,
-    "rescores": 0,
-    "wall_seconds": 840.5
-   },
-   {
-    "paper": "kipf2017-gcn~clean",
-    "runs_requested": 23,
-    "runs_executed": 23,
-    "cache_hits": 0,
-    "rescores": 0,
-    "wall_seconds": 290.3
    },
    {
     "paper": "wu2019-sgc",
@@ -314,28 +325,60 @@
     "wall_seconds": 7.2
    },
    {
+    "paper": "kipf2016-vgae~hist-3a98122",
+    "runs_requested": 23,
+    "runs_executed": 3,
+    "cache_hits": 20,
+    "rescores": 0,
+    "wall_seconds": 470.5
+   },
+   {
+    "paper": "kipf2016-vgae~metric-swap",
+    "runs_requested": 53,
+    "runs_executed": 1,
+    "cache_hits": 52,
+    "rescores": 25,
+    "wall_seconds": 182.6
+   },
+   {
+    "paper": "kipf2017-gcn~blind-b",
+    "runs_requested": 85,
+    "runs_executed": 24,
+    "cache_hits": 61,
+    "rescores": 0,
+    "wall_seconds": 307.6
+   },
+   {
+    "paper": "kipf2017-gcn~clean",
+    "runs_requested": 23,
+    "runs_executed": 3,
+    "cache_hits": 20,
+    "rescores": 0,
+    "wall_seconds": 72.9
+   },
+   {
     "paper": "wu2019-sgc~blind-a",
     "runs_requested": 149,
-    "runs_executed": 137,
-    "cache_hits": 12,
+    "runs_executed": 3,
+    "cache_hits": 146,
     "rescores": 0,
-    "wall_seconds": 246.5
+    "wall_seconds": 23.6
    },
    {
     "paper": "wu2019-sgc~clean",
     "runs_requested": 65,
-    "runs_executed": 65,
-    "cache_hits": 0,
+    "runs_executed": 3,
+    "cache_hits": 62,
     "rescores": 0,
-    "wall_seconds": 140.8
+    "wall_seconds": 12.3
    },
    {
     "paper": "wu2019-sgc~metric-swap",
     "runs_requested": 173,
-    "runs_executed": 95,
-    "cache_hits": 78,
-    "rescores": 49,
-    "wall_seconds": 194.6
+    "runs_executed": 4,
+    "cache_hits": 169,
+    "rescores": 69,
+    "wall_seconds": 33.5
    }
   ]
  },
@@ -387,67 +430,7 @@
     "ok": true
    },
    {
-    "paper": "kipf2016-vgae~hist-3a98122",
-    "config": {},
-    "metric": "roc_auc",
-    "fn": "roc_auc_score",
-    "rescored": 0.9053789845496869,
-    "witnessed": 0.9053789845496869,
-    "abs_diff": 0.0,
-    "ok": true
-   },
-   {
-    "paper": "kipf2016-vgae~hist-3a98122",
-    "config": {},
-    "metric": "average_precision",
-    "fn": "average_precision_score",
-    "rescored": 0.9230595185751276,
-    "witnessed": 0.9230595185751276,
-    "abs_diff": 0.0,
-    "ok": true
-   },
-   {
-    "paper": "kipf2016-vgae~metric-swap",
-    "config": {},
-    "metric": "roc_auc",
-    "fn": "roc_auc_score",
-    "rescored": 0.9109743670988626,
-    "witnessed": 0.9109743670988626,
-    "abs_diff": 0.0,
-    "ok": true
-   },
-   {
-    "paper": "kipf2016-vgae~metric-swap",
-    "config": {},
-    "metric": "average_precision",
-    "fn": "roc_auc_score",
-    "rescored": 0.9109743670988626,
-    "witnessed": 0.9109743670988626,
-    "abs_diff": 0.0,
-    "ok": true
-   },
-   {
     "paper": "kipf2017-gcn",
-    "config": {},
-    "metric": "accuracy",
-    "fn": "accuracy_score",
-    "rescored": 0.815,
-    "witnessed": 0.815,
-    "abs_diff": 0.0,
-    "ok": true
-   },
-   {
-    "paper": "kipf2017-gcn~blind-b",
-    "config": {},
-    "metric": "accuracy",
-    "fn": "accuracy_score",
-    "rescored": 0.439,
-    "witnessed": 0.439,
-    "abs_diff": 0.0,
-    "ok": true
-   },
-   {
-    "paper": "kipf2017-gcn~clean",
     "config": {},
     "metric": "accuracy",
     "fn": "accuracy_score",
@@ -493,6 +476,66 @@
     "fn": "accuracy_score",
     "rescored": 0.789,
     "witnessed": 0.789,
+    "abs_diff": 0.0,
+    "ok": true
+   },
+   {
+    "paper": "kipf2016-vgae~hist-3a98122",
+    "config": {},
+    "metric": "roc_auc",
+    "fn": "roc_auc_score",
+    "rescored": 0.9053789845496869,
+    "witnessed": 0.9053789845496869,
+    "abs_diff": 0.0,
+    "ok": true
+   },
+   {
+    "paper": "kipf2016-vgae~hist-3a98122",
+    "config": {},
+    "metric": "average_precision",
+    "fn": "average_precision_score",
+    "rescored": 0.9230595185751276,
+    "witnessed": 0.9230595185751276,
+    "abs_diff": 0.0,
+    "ok": true
+   },
+   {
+    "paper": "kipf2016-vgae~metric-swap",
+    "config": {},
+    "metric": "roc_auc",
+    "fn": "roc_auc_score",
+    "rescored": 0.9109743670988626,
+    "witnessed": 0.9109743670988626,
+    "abs_diff": 0.0,
+    "ok": true
+   },
+   {
+    "paper": "kipf2016-vgae~metric-swap",
+    "config": {},
+    "metric": "average_precision",
+    "fn": "roc_auc_score",
+    "rescored": 0.9109743670988626,
+    "witnessed": 0.9109743670988626,
+    "abs_diff": 0.0,
+    "ok": true
+   },
+   {
+    "paper": "kipf2017-gcn~blind-b",
+    "config": {},
+    "metric": "accuracy",
+    "fn": "accuracy_score",
+    "rescored": 0.439,
+    "witnessed": 0.439,
+    "abs_diff": 0.0,
+    "ok": true
+   },
+   {
+    "paper": "kipf2017-gcn~clean",
+    "config": {},
+    "metric": "accuracy",
+    "fn": "accuracy_score",
+    "rescored": 0.815,
+    "witnessed": 0.815,
     "abs_diff": 0.0,
     "ok": true
    },

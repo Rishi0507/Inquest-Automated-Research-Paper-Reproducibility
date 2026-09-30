@@ -92,7 +92,7 @@ def e3() -> dict:
                         "gap_detected": {c: vd != "REPRODUCED" for c, vd in executed.items()},
                         "attributed_to": named})
         elif v["kind"] == "planted":
-            rev = v.get("revealed") or faults.reveal(v["paper_id"])
+            rev = faults.reveal(v["paper_id"])  # scored against the latest analysis, never a stale reveal
             out = rev["outcome"]
             row.update({"fault": rev["manifest"]["fault"], "seal_intact": rev["seal_intact"],
                         "detected": out.get("detected"), "top1_correct": out.get("top1_correct"), "top1": out.get("top1")})
