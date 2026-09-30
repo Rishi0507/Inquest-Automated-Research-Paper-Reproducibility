@@ -93,7 +93,7 @@ export default function AnalysisView() {
                   <div className="card">
                     <div className="card-title">
                       <span>Measured gap attribution</span>
-                      <span className="muted small">gap {signed(att.gap)} pts · τ {fmt(att.tau)} · k={att.k} {att.paired ? "paired" : "unpaired"} seeds · {att.trainings} trainings, {att.rescores} re-scores</span>
+                      <span className="muted small">gap {signed(att.gap)} pts · τ {fmt(att.tau)} · k={att.k} {att.paired ? "paired" : "unpaired"} seeds · {Object.keys(att.coalitions).length} coalitions evaluated</span>
                     </div>
                     {att.shares.length ? <Waterfall att={att} /> : <p className="ink2">No deviation survived screening against the noise floor.</p>}
                     {!att.shares_valid && <p className="muted small">The gap is within 2τ, so shares are shown in points only.</p>}
@@ -168,7 +168,7 @@ export default function AnalysisView() {
                     </div>
                   </div>
                 )}
-                <p className="muted small">{a.standing_note} Cost of this analysis: {a.cost.runs_executed} runs executed, {a.cost.cache_hits} served from cache, {a.cost.rescores} eval re-scores. Seeds per coalition share their seed set, so {a.determinism?.deterministic ? "coalition differences are paired." : "differences would be paired only for deterministic runs; here they are not."}</p>
+                <p className="muted small">{a.standing_note} Cost of this analysis: {a.cost.runs_executed} run{a.cost.runs_executed === 1 ? "" : "s"} executed, {a.cost.cache_hits} served from cache, {a.cost.rescores} eval re-score{a.cost.rescores === 1 ? "" : "s"}. Seeds per coalition share their seed set, so {a.determinism?.deterministic ? "coalition differences are paired." : "differences would be paired only for deterministic runs; here they are not."}</p>
                 {att && <p className="muted small">Attribution explains only deviations the platform can identify and toggle; unidentified causes appear as residual. Share of gap: {att.shares.map((s) => `${s.label} ${s.fraction !== null ? pct(s.fraction) : signed(s.points)}`).join(", ")}.</p>}
               </motion.div>
             )}

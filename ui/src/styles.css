@@ -405,3 +405,15 @@ label.field .select { width: 100%; max-width: 100%; }
   .topbar-inner { padding: 10px 16px; gap: 12px; }
   .page { padding: 26px 16px 64px; }
 }
+
+/* ------------------------------------------------------------------ sub-tabs */
+.chips { flex: 0 1 auto; margin: 0 auto; }
+.subnav-wrap { max-width: 1320px; margin: 0 auto; padding: 18px 28px 0; }
+.subnav { display: flex; gap: 22px; border-bottom: 1px solid var(--line); overflow-x: auto; scrollbar-width: none; }
+.subnav::-webkit-scrollbar { display: none; }
+.subnav-tab { position: relative; border: 0; background: transparent; padding: 8px 0 11px; font-size: 13.5px; color: var(--muted); cursor: pointer; white-space: nowrap; transition: color 0.2s var(--ease); }
+.subnav-tab:hover { color: var(--ink); }
+.subnav-tab[aria-selected="true"] { color: var(--ink); }
+.subnav-line { position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; border-radius: 2px; background: var(--ink); }
+.subnav-wrap + .page { padding-top: 22px; }
+@media (max-width: 900px) { .subnav-wrap { padding: 14px 16px 0; } }

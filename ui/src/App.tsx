@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { api, type PaperSummary, type Status } from "./api";
-import { AppCtx, TABS, type Tab } from "./ui";
+import { AppCtx, GROUPS, TABS, groupOf, type GroupId, type Tab } from "./ui";
 import Overview from "./views/Overview";
 import Papers from "./views/Papers";
 import Claims from "./views/Claims";
@@ -125,6 +125,9 @@ export default function App() {
   }[tab];
 
   const running = papers.some((p) => p.active_job);
+  const group = groupOf(tab);
+  const [lastView, setLastView] = useState<Partial<Record<GroupId, Tab>>>({});
+  useEffect(() => { setLastView((m) => ({ ...m, [group.id]: tab })); }, [tab, group.id]);
 
   return (
     <AppCtx.Provider value={ctx}>
@@ -132,16 +135,29 @@ export default function App() {
         <div className="topbar-inner">
           <div className="wordmark" onClick={() => ctx.go("overview")}><Mark />Inquest</div>
           <nav className="chips" role="tablist" aria-label="Sections">
-            {TABS.map((t) => (
-              <button key={t.id} role="tab" className="chip-tab" aria-selected={tab === t.id} onClick={() => ctx.go(t.id)}>
-                {tab === t.id && <motion.i className="pill" layoutId="chip-pill" transition={{ type: "spring", stiffness: 420, damping: 36 }} />}
-                <span>{t.label}{t.id === "runs" && running ? <span className="status-dot" style={{ background: "var(--accent)", marginLeft: 7, verticalAlign: 1 }} /> : null}</span>
+            {GROUPS.map((g) => (
+              <button key={g.id} role="tab" className="chip-tab" aria-selected={group.id === g.id}
+                onClick={() => ctx.go(lastView[g.id] ?? g.views[0].id)}>
+                {group.id === g.id && <motion.i className="pill" layoutId="chip-pill" transition={{ type: "spring", stiffness: 420, damping: 36 }} />}
+                <span>{g.label}{g.id === "analysis" && running ? <span className="status-dot" style={{ background: "var(--accent)", marginLeft: 7, verticalAlign: 1 }} /> : null}</span>
               </button>
             ))}
           </nav>
           <div className="topbar-right"><ThemeToggle /></div>
         </div>
       </header>
+      {group.views.length > 1 && (
+        <div className="subnav-wrap">
+          <nav className="subnav" role="tablist" aria-label={`${group.label} views`}>
+            {group.views.map((v) => (
+              <button key={v.id} role="tab" className="subnav-tab" aria-selected={tab === v.id} onClick={() => ctx.go(v.id)}>
+                {tab === v.id && <motion.i className="subnav-line" layoutId={`subnav-${group.id}`} transition={{ type: "spring", stiffness: 480, damping: 38 }} />}
+                <span>{v.label}{v.id === "runs" && running ? <span className="status-dot" style={{ background: "var(--accent)", marginLeft: 7, verticalAlign: 1 }} /> : null}</span>
+              </button>
+            ))}
+          </nav>
+        </div>
+      )}
       <AnimatePresence mode="wait" initial={false}>
         <motion.main
           key={tab}

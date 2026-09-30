@@ -18,6 +18,17 @@ export const TABS: { id: Tab; label: string }[] = [
   { id: "report", label: "Report" },
 ];
 
+/** Five top-level sections; each holds one or more views reached through the sub-tab row. */
+export type GroupId = "overview" | "papers" | "analysis" | "validation" | "report";
+export const GROUPS: { id: GroupId; label: string; views: { id: Tab; label: string }[] }[] = [
+  { id: "overview", label: "Overview", views: [{ id: "overview", label: "Overview" }] },
+  { id: "papers", label: "Papers", views: [{ id: "claims", label: "Claims" }, { id: "papers", label: "Library" }] },
+  { id: "analysis", label: "Analysis", views: [{ id: "analysis", label: "Results" }, { id: "witness", label: "Witness" }, { id: "runs", label: "Runs" }] },
+  { id: "validation", label: "Validation", views: [{ id: "controls", label: "Controls" }, { id: "evaluation", label: "Evaluation" }] },
+  { id: "report", label: "Report", views: [{ id: "report", label: "Dossier" }, { id: "ledger", label: "Ledger" }] },
+];
+export const groupOf = (tab: Tab) => GROUPS.find((g) => g.views.some((v) => v.id === tab)) ?? GROUPS[0];
+
 type Ctx = {
   tab: Tab; go: (tab: Tab, paper?: string | null) => void;
   paperId: string | null; setPaperId: (id: string) => void;
@@ -145,7 +156,7 @@ export function PaperPicker({ filter }: { filter?: (p: PaperSummary) => boolean 
   return (
     <select className="select" value={paperId ?? ""} onChange={(e) => setPaperId(e.target.value)} aria-label="Paper">
       {list.map((p) => (
-        <option key={p.paper_id} value={p.paper_id}>{p.parent ? `${p.title.replace(/\s*\[.*\]$/, "")} (${p.variant_kind} control)` : p.title}</option>
+        <option key={p.paper_id} value={p.paper_id}>{p.parent ? `${p.title.replace(/\s*\[.*\]$/, "")} (control: ${p.paper_id.split("~")[1]})` : p.title}</option>
       ))}
     </select>
   );
