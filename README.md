@@ -152,20 +152,16 @@ For UI development, `npm run dev` inside `ui/` serves the interface on port 3000
 
 ## Web interface
 
-A landing page and ten sections reached from the chip bar at the top:
+A landing page and five sections in the chip bar at the top. Sections with more than one view
+show a second row of tabs.
 
-| Section | Content |
-|---|---|
-| Overview | Corpus summary, the three capabilities with live numbers, how a claim is judged |
-| Papers | Corpus, controls and registered papers; registration of a new PDF and repository; adapter review and edit |
-| Claims | Claims with their pages, bands, mapping status, SCI and verdicts; the evidence drawer shows the PDF location, the code line and the run log side by side |
-| Runs | Stage progress, run, cache and re-score counters, and the live log of an analysis |
-| Analysis | Seed histogram with both bands, selection signal, attribution waterfall with intervals, screening table, specification sweep |
-| Witness | Stated against observed, determinism audit, seed calls, metric provenance and the re-scoring self-check |
-| Ledger | Claims sharing a model, dataset and metric across papers |
-| Controls | Blind fault planting with a sealed manifest, clean controls, reveal and scoring |
-| Evaluation | Experiments E1 to E7 |
-| Report | Export and preview of the evidence dossier as PDF |
+| Section | Views | Content |
+|---|---|---|
+| Overview | Overview | Corpus summary, the three capabilities with live numbers, how a claim is judged |
+| Papers | Claims, Library | Claims with their pages, bands, mapping status, SCI and verdicts, with the evidence drawer (PDF location, code line and run log side by side); the paper library, registration of a new PDF and repository, and adapter review |
+| Analysis | Results, Witness, Runs | Seed histogram with both bands, selection signal, attribution waterfall and screening, specification sweep; stated against observed, determinism audit, deviations and metric provenance; stage progress, counters and the live log of an analysis |
+| Validation | Controls, Evaluation | Blind fault planting with a sealed manifest, clean controls, reveal and scoring; experiments E1 to E7 |
+| Report | Dossier, Ledger | Export and preview of the evidence dossier as PDF; claims sharing a model, dataset, metric and protocol across papers |
 
 ## Adding a paper
 

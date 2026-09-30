@@ -9,27 +9,27 @@ exchange, and the rules that keep model output out of verdicts.
 
 ```mermaid
 flowchart TB
-    A[Paper PDF + repository URL] --> B[C1 Ingestion, environment, sandbox]
-    B --> C[C2 Claim extraction, span-verified]
-    B --> D[C7 Cartographer, claim to experiment adapter]
+    A["Paper PDF<br/>and repository URL"] --> B["C1<br/>Ingestion and<br/>environment"]
+    B --> C["C2<br/>Claim extraction<br/>(span-verified)"]
+    B --> D["C7<br/>Cartographer"]
     C --> D
-    C --> P[C13 Pre-flight: GRIM, dispersion]
-    D --> R[C3 Runner: sandbox, cache, pool]
-    R --> W[C4 Runtime Witness]
-    R --> DA[C5 Determinism audit]
-    R --> S[C6 Seed swarm: band, selection signal]
-    W --> V[C8 Deviation finder]
+    C --> P["C13<br/>Pre-flight checks"]
+    D --> R["C3<br/>Sandboxed runner"]
+    R --> W["C4<br/>Runtime Witness"]
+    R --> DA["C5<br/>Determinism audit"]
+    R --> S["C6<br/>Seed swarm"]
+    W --> V["C8<br/>Deviation finder"]
     C --> V
-    V --> T[C9 Attribution: screen, exact Shapley, bootstrap]
-    V --> SP[C14 Specification sweep]
+    V --> T["C9<br/>Attribution"]
+    V --> SP["C14<br/>Specification sweep"]
     S --> T
-    T --> J[C10 Verdict engine, rule-based]
+    T --> J["C10<br/>Verdict engine"]
     SP --> J
     P --> J
     DA --> J
     S --> J
-    C --> L[C15 Claim ledger]
-    J --> K[C11 web interface, C17 dossier]
+    C --> L["C15<br/>Claim ledger"]
+    J --> K["C11 web interface<br/>C17 dossier"]
     L --> K
 ```
 
