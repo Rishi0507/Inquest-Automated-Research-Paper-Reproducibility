@@ -1,10 +1,208 @@
 {
- "generated": "2026-09-21 19:58:25",
+ "generated": "2026-09-21 23:53:49",
  "llm": {
   "anthropic": false,
   "model": "claude-opus-5",
   "local": false,
   "local_model": null
+ },
+ "E1": {
+  "experiment": "E1",
+  "rows": [
+   {
+    "paper": "kipf2016-vgae",
+    "status": "not extracted"
+   },
+   {
+    "paper": "kipf2017-gcn",
+    "status": "not extracted"
+   },
+   {
+    "paper": "wu2019-sgc",
+    "status": "not extracted"
+   }
+  ]
+ },
+ "E2": {
+  "experiment": "E2",
+  "rows": [],
+  "first_attempt_rate": null
+ },
+ "E3": {
+  "experiment": "E3",
+  "rows": [
+   {
+    "variant": "kipf2016-vgae~hist-3a98122",
+    "kind": "historical",
+    "analysed": true,
+    "verdicts": {
+     "C-01": "REPRODUCED",
+     "C-02": "REPRODUCED"
+    },
+    "fix_commit": "3a98122",
+    "gap_detected": {
+     "C-01": false,
+     "C-02": false
+    },
+    "attributed_to": {
+     "C-01": [],
+     "C-02": []
+    }
+   },
+   {
+    "variant": "kipf2016-vgae~metric-swap",
+    "kind": "planted",
+    "analysed": true,
+    "verdicts": {
+     "C-01": "REPRODUCED",
+     "C-02": "NOT_REPRODUCED_UNEXPLAINED"
+    },
+    "fault": "metric_swap",
+    "seal_intact": true,
+    "detected": true,
+    "top1_correct": false,
+    "top1": [],
+    "share_errors": []
+   },
+   {
+    "variant": "kipf2017-gcn~blind-b",
+    "kind": "planted",
+    "analysed": true,
+    "verdicts": {
+     "C-01": "NOT_REPRODUCED_UNEXPLAINED",
+     "C-02": "NOT_IMPLEMENTED",
+     "C-03": "NOT_IMPLEMENTED",
+     "C-04": "NOT_IMPLEMENTED"
+    },
+    "fault": "weight_decay_hardcoded",
+    "seal_intact": true,
+    "detected": true,
+    "top1_correct": false,
+    "top1": [],
+    "share_errors": []
+   },
+   {
+    "variant": "kipf2017-gcn~clean",
+    "kind": "clean",
+    "analysed": true,
+    "verdicts": {
+     "C-01": "REPRODUCED",
+     "C-02": "NOT_IMPLEMENTED",
+     "C-03": "NOT_IMPLEMENTED",
+     "C-04": "NOT_IMPLEMENTED"
+    },
+    "false_positive": false,
+    "non_reproduced_claims": []
+   },
+   {
+    "variant": "wu2019-sgc~blind-a",
+    "kind": "planted",
+    "analysed": true,
+    "verdicts": {
+     "C-01": "NOT_REPRODUCED_EXPLAINED",
+     "C-02": "REPRODUCED",
+     "C-03": "NOT_REPRODUCED_EXPLAINED",
+     "C-04": "NOT_IMPLEMENTED",
+     "C-05": "NOT_IMPLEMENTED"
+    },
+    "fault": "epoch_drift",
+    "seal_intact": true,
+    "detected": true,
+    "top1_correct": true,
+    "top1": [
+     {
+      "claim": "C-01",
+      "top": "f1",
+      "label": "epochs 30 against 100",
+      "points": 0.9666666666666686,
+      "correct": true
+     },
+     {
+      "claim": "C-03",
+      "top": "f1",
+      "label": "epochs 30 against 100",
+      "points": 0.63333333333334,
+      "correct": true
+     }
+    ],
+    "share_errors": [
+     {
+      "claim": "C-01",
+      "shapley": 0.9666666666666686,
+      "single_fault_effect": 0.9700000000000131,
+      "abs_error": 0.0033333333333445125
+     },
+     {
+      "claim": "C-03",
+      "shapley": 0.63333333333334,
+      "single_fault_effect": 0.3550000000000182,
+      "abs_error": 0.2783333333333218
+     }
+    ]
+   },
+   {
+    "variant": "wu2019-sgc~clean",
+    "kind": "clean",
+    "analysed": true,
+    "verdicts": {
+     "C-01": "REPRODUCED",
+     "C-02": "REPRODUCED",
+     "C-03": "REPRODUCED",
+     "C-04": "NOT_IMPLEMENTED",
+     "C-05": "NOT_IMPLEMENTED"
+    },
+    "false_positive": false,
+    "non_reproduced_claims": []
+   },
+   {
+    "variant": "wu2019-sgc~metric-swap",
+    "kind": "planted",
+    "analysed": true,
+    "verdicts": {
+     "C-01": "NOT_REPRODUCED_EXPLAINED",
+     "C-02": "NOT_REPRODUCED_EXPLAINED",
+     "C-03": "NOT_REPRODUCED_UNEXPLAINED",
+     "C-04": "NOT_IMPLEMENTED",
+     "C-05": "NOT_IMPLEMENTED"
+    },
+    "fault": "metric_swap",
+    "seal_intact": true,
+    "detected": true,
+    "top1_correct": true,
+    "top1": [
+     {
+      "claim": "C-01",
+      "top": "f1",
+      "label": "Metric definition: f1_score instead of accuracy",
+      "points": -0.21699589351413806,
+      "correct": true
+     },
+     {
+      "claim": "C-02",
+      "top": "f1",
+      "label": "Metric definition: f1_score instead of accuracy",
+      "points": -0.34718134970023584,
+      "correct": true
+     }
+    ],
+    "share_errors": [
+     {
+      "claim": "C-01",
+      "shapley": -0.21699589351413806,
+      "single_fault_effect": -0.21684009683463046,
+      "abs_error": 0.00015579667950760268
+     },
+     {
+      "claim": "C-02",
+      "shapley": -0.34718134970023584,
+      "single_fault_effect": -0.3543735921840607,
+      "abs_error": 0.007192242483824884
+     }
+    ]
+   }
+  ],
+  "top1_accuracy": 0.5,
+  "false_positive_rate": 0.0
  },
  "E4": {
   "experiment": "E4",
@@ -50,5 +248,375 @@
   "pool_mean": 83.04833333333333,
   "pool_std": 0.8166678196694275,
   "pool_size": 60
+ },
+ "E6": {
+  "experiment": "E6",
+  "totals": {
+   "runs_requested": 3172,
+   "runs_executed": 1681,
+   "cache_hits": 1486
+  },
+  "per_analysis": [
+   {
+    "paper": "kipf2016-vgae",
+    "runs_requested": 65,
+    "runs_executed": 55,
+    "cache_hits": 10,
+    "rescores": 0,
+    "wall_seconds": 7521.9
+   },
+   {
+    "paper": "kipf2016-vgae~hist-3a98122",
+    "runs_requested": 23,
+    "runs_executed": 3,
+    "cache_hits": 20,
+    "rescores": 0,
+    "wall_seconds": 350.8
+   },
+   {
+    "paper": "kipf2016-vgae~metric-swap",
+    "runs_requested": 53,
+    "runs_executed": 23,
+    "cache_hits": 30,
+    "rescores": 5,
+    "wall_seconds": 2314.9
+   },
+   {
+    "paper": "kipf2017-gcn",
+    "runs_requested": 137,
+    "runs_executed": 1,
+    "cache_hits": 136,
+    "rescores": 0,
+    "wall_seconds": 28.5
+   },
+   {
+    "paper": "kipf2017-gcn~blind-b",
+    "runs_requested": 57,
+    "runs_executed": 55,
+    "cache_hits": 2,
+    "rescores": 0,
+    "wall_seconds": 840.5
+   },
+   {
+    "paper": "kipf2017-gcn~clean",
+    "runs_requested": 23,
+    "runs_executed": 23,
+    "cache_hits": 0,
+    "rescores": 0,
+    "wall_seconds": 290.3
+   },
+   {
+    "paper": "wu2019-sgc",
+    "runs_requested": 118,
+    "runs_executed": 1,
+    "cache_hits": 117,
+    "rescores": 0,
+    "wall_seconds": 7.2
+   },
+   {
+    "paper": "wu2019-sgc~blind-a",
+    "runs_requested": 149,
+    "runs_executed": 137,
+    "cache_hits": 12,
+    "rescores": 0,
+    "wall_seconds": 246.5
+   },
+   {
+    "paper": "wu2019-sgc~clean",
+    "runs_requested": 65,
+    "runs_executed": 65,
+    "cache_hits": 0,
+    "rescores": 0,
+    "wall_seconds": 140.8
+   },
+   {
+    "paper": "wu2019-sgc~metric-swap",
+    "runs_requested": 173,
+    "runs_executed": 95,
+    "cache_hits": 78,
+    "rescores": 49,
+    "wall_seconds": 194.6
+   }
+  ]
+ },
+ "E7": {
+  "experiment": "E7",
+  "rows": [
+   {
+    "paper": "kipf2016-vgae",
+    "config": {},
+    "metric": "roc_auc",
+    "fn": "roc_auc_score",
+    "rescored": 0.9138656748124971,
+    "witnessed": 0.9138656748124971,
+    "abs_diff": 0.0,
+    "ok": true
+   },
+   {
+    "paper": "kipf2016-vgae",
+    "config": {},
+    "metric": "average_precision",
+    "fn": "average_precision_score",
+    "rescored": 0.9257525725133157,
+    "witnessed": 0.9257525725133156,
+    "abs_diff": 1.1102230246251565e-16,
+    "ok": true
+   },
+   {
+    "paper": "kipf2016-vgae",
+    "config": {
+     "dataset": "citeseer"
+    },
+    "metric": "roc_auc",
+    "fn": "roc_auc_score",
+    "rescored": 0.8946045163627582,
+    "witnessed": 0.8946045163627582,
+    "abs_diff": 0.0,
+    "ok": true
+   },
+   {
+    "paper": "kipf2016-vgae",
+    "config": {
+     "dataset": "citeseer"
+    },
+    "metric": "average_precision",
+    "fn": "average_precision_score",
+    "rescored": 0.9061362778053346,
+    "witnessed": 0.9061362778053346,
+    "abs_diff": 0.0,
+    "ok": true
+   },
+   {
+    "paper": "kipf2016-vgae~hist-3a98122",
+    "config": {},
+    "metric": "roc_auc",
+    "fn": "roc_auc_score",
+    "rescored": 0.9053789845496869,
+    "witnessed": 0.9053789845496869,
+    "abs_diff": 0.0,
+    "ok": true
+   },
+   {
+    "paper": "kipf2016-vgae~hist-3a98122",
+    "config": {},
+    "metric": "average_precision",
+    "fn": "average_precision_score",
+    "rescored": 0.9230595185751276,
+    "witnessed": 0.9230595185751276,
+    "abs_diff": 0.0,
+    "ok": true
+   },
+   {
+    "paper": "kipf2016-vgae~metric-swap",
+    "config": {},
+    "metric": "roc_auc",
+    "fn": "roc_auc_score",
+    "rescored": 0.9109743670988626,
+    "witnessed": 0.9109743670988626,
+    "abs_diff": 0.0,
+    "ok": true
+   },
+   {
+    "paper": "kipf2016-vgae~metric-swap",
+    "config": {},
+    "metric": "average_precision",
+    "fn": "roc_auc_score",
+    "rescored": 0.9109743670988626,
+    "witnessed": 0.9109743670988626,
+    "abs_diff": 0.0,
+    "ok": true
+   },
+   {
+    "paper": "kipf2017-gcn",
+    "config": {},
+    "metric": "accuracy",
+    "fn": "accuracy_score",
+    "rescored": 0.815,
+    "witnessed": 0.815,
+    "abs_diff": 0.0,
+    "ok": true
+   },
+   {
+    "paper": "kipf2017-gcn~blind-b",
+    "config": {},
+    "metric": "accuracy",
+    "fn": "accuracy_score",
+    "rescored": 0.439,
+    "witnessed": 0.439,
+    "abs_diff": 0.0,
+    "ok": true
+   },
+   {
+    "paper": "kipf2017-gcn~clean",
+    "config": {},
+    "metric": "accuracy",
+    "fn": "accuracy_score",
+    "rescored": 0.815,
+    "witnessed": 0.815,
+    "abs_diff": 0.0,
+    "ok": true
+   },
+   {
+    "paper": "wu2019-sgc",
+    "config": {
+     "dataset": "cora",
+     "tuned": true
+    },
+    "metric": "accuracy",
+    "fn": "accuracy_score",
+    "rescored": 0.81,
+    "witnessed": 0.81,
+    "abs_diff": 0.0,
+    "ok": true
+   },
+   {
+    "paper": "wu2019-sgc",
+    "config": {
+     "dataset": "citeseer",
+     "tuned": true,
+     "epochs": 150
+    },
+    "metric": "accuracy",
+    "fn": "accuracy_score",
+    "rescored": 0.718,
+    "witnessed": 0.718,
+    "abs_diff": 0.0,
+    "ok": true
+   },
+   {
+    "paper": "wu2019-sgc",
+    "config": {
+     "dataset": "pubmed",
+     "tuned": true
+    },
+    "metric": "accuracy",
+    "fn": "accuracy_score",
+    "rescored": 0.789,
+    "witnessed": 0.789,
+    "abs_diff": 0.0,
+    "ok": true
+   },
+   {
+    "paper": "wu2019-sgc~blind-a",
+    "config": {
+     "dataset": "cora",
+     "tuned": true
+    },
+    "metric": "accuracy",
+    "fn": "accuracy_score",
+    "rescored": 0.801,
+    "witnessed": 0.801,
+    "abs_diff": 0.0,
+    "ok": true
+   },
+   {
+    "paper": "wu2019-sgc~blind-a",
+    "config": {
+     "dataset": "citeseer",
+     "tuned": true,
+     "epochs": 150
+    },
+    "metric": "accuracy",
+    "fn": "accuracy_score",
+    "rescored": 0.718,
+    "witnessed": 0.718,
+    "abs_diff": 0.0,
+    "ok": true
+   },
+   {
+    "paper": "wu2019-sgc~blind-a",
+    "config": {
+     "dataset": "pubmed",
+     "tuned": true
+    },
+    "metric": "accuracy",
+    "fn": "accuracy_score",
+    "rescored": 0.783,
+    "witnessed": 0.783,
+    "abs_diff": 0.0,
+    "ok": true
+   },
+   {
+    "paper": "wu2019-sgc~clean",
+    "config": {
+     "dataset": "cora",
+     "tuned": true
+    },
+    "metric": "accuracy",
+    "fn": "accuracy_score",
+    "rescored": 0.81,
+    "witnessed": 0.81,
+    "abs_diff": 0.0,
+    "ok": true
+   },
+   {
+    "paper": "wu2019-sgc~clean",
+    "config": {
+     "dataset": "citeseer",
+     "tuned": true,
+     "epochs": 150
+    },
+    "metric": "accuracy",
+    "fn": "accuracy_score",
+    "rescored": 0.718,
+    "witnessed": 0.718,
+    "abs_diff": 0.0,
+    "ok": true
+   },
+   {
+    "paper": "wu2019-sgc~clean",
+    "config": {
+     "dataset": "pubmed",
+     "tuned": true
+    },
+    "metric": "accuracy",
+    "fn": "accuracy_score",
+    "rescored": 0.789,
+    "witnessed": 0.789,
+    "abs_diff": 0.0,
+    "ok": true
+   },
+   {
+    "paper": "wu2019-sgc~metric-swap",
+    "config": {
+     "dataset": "cora",
+     "tuned": true
+    },
+    "metric": "accuracy",
+    "fn": "f1_score",
+    "rescored": 0.8121884263755602,
+    "witnessed": 0.8121884263755602,
+    "abs_diff": 0.0,
+    "ok": true
+   },
+   {
+    "paper": "wu2019-sgc~metric-swap",
+    "config": {
+     "dataset": "citeseer",
+     "tuned": true,
+     "epochs": 150
+    },
+    "metric": "accuracy",
+    "fn": "f1_score",
+    "rescored": 0.7216524347596648,
+    "witnessed": 0.7216524347596647,
+    "abs_diff": 1.1102230246251565e-16,
+    "ok": true
+   },
+   {
+    "paper": "wu2019-sgc~metric-swap",
+    "config": {
+     "dataset": "pubmed",
+     "tuned": true
+    },
+    "metric": "accuracy",
+    "fn": "f1_score",
+    "rescored": 0.7884354431380759,
+    "witnessed": 0.7884354431380759,
+    "abs_diff": 0.0,
+    "ok": true
+   }
+  ],
+  "agreement_rate": 1.0
  }
 }
