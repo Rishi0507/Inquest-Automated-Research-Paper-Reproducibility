@@ -52,7 +52,7 @@ export default function Overview() {
       <section className="hero">
         <Reveal>
           <div className="kicker">Forensic reproducibility for machine learning papers</div>
-          <h1>Reproduction as a <em>measurement</em>, not an opinion.</h1>
+          <h1>Research papers meet their own code here.</h1>
           <p className="lede">
             Inquest runs a paper's own code, watches what it actually does, and prices every difference between the
             code and the text by re-executing it. Language models read. Execution and statistics judge.
