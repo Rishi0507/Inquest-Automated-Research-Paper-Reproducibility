@@ -5,6 +5,21 @@ built web interface at `/`. Long-running work runs in a background thread and re
 identifier; poll `GET /api/jobs/{job_id}`. One job runs per paper at a time; a second request
 returns `409`.
 
+```mermaid
+stateDiagram-v2
+    [*] --> queued: POST starts a job
+    queued --> running: background thread starts
+    running --> done: work returns
+    running --> failed: work raises an exception
+    queued --> interrupted: owning process exited
+    running --> interrupted: owning process exited
+    done --> [*]
+    failed --> [*]
+    interrupted --> [*]
+```
+
+While a paper's job is `queued` or `running`, a new job request for that paper returns `409`.
+
 ## Status and corpus
 
 | Method | Path | Result |
