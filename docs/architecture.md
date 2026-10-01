@@ -180,6 +180,16 @@ reference and is excluded.
 6. The aligned configuration is run over the full seed count to produce the aligned band and
    the aligned selection signal.
 
+```mermaid
+flowchart TB
+    A["Repository as-is and fully aligned configuration<br/>evaluated over the same seed set"] --> B["Two-sided screening<br/>first-order and total effects against the noise floor"]
+    B -->|"survivors"| C["Exact Shapley values<br/>at most four train-phase and three eval-phase"]
+    B -->|"pruned"| D["Joint check<br/>do pruned deviations matter together?"]
+    C --> E["Seed-index bootstrap, B = 1000<br/>interval for every share"]
+    D --> E
+    E --> F["Aligned configuration over the full seed count<br/>aligned band and aligned selection signal"]
+```
+
 ## Verdicts
 
 The engine evaluates rules in a fixed order and records the rule path.
