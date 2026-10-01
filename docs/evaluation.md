@@ -33,6 +33,24 @@ never reads the manifest. `faults reveal` checks the hash and scores the latest 
 the fault counts as recovered when the largest attributed share names a deviation of the
 planted parameter and phase.
 
+```mermaid
+sequenceDiagram
+    participant O as Operator
+    participant F as faults
+    participant M as Sealed manifest
+    participant A as analyze
+    O->>F: faults plant --fault random
+    F->>F: draw a catalogued fault and apply it to a copy
+    F->>M: write the manifest outside the corpus
+    F->>O: variant id, with only the manifest SHA-256 in its metadata
+    O->>A: analyze the parent paper
+    O->>A: analyze the variant
+    Note over A: automatic deviation finder,<br/>the manifest is never read
+    O->>F: faults reveal --out variant
+    F->>M: check the hash and unseal
+    F->>O: recovered when the largest share names<br/>the planted parameter and phase
+```
+
 | Fault | Mechanism | Applies to |
 |---|---|---|
 | `metric_swap` | The reported metric is computed with a different function (weighted F1 instead of accuracy; AUC instead of average precision) | SGC, VGAE |
