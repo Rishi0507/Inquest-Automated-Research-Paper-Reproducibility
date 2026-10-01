@@ -2,6 +2,7 @@ import { useState } from "react";
 import { api } from "../api";
 import JobPanel from "../components/JobPanel";
 import { Empty, PageHead, VerdictChip, useApp, useAsync } from "../ui";
+import Select from "../components/Select";
 
 export default function Controls() {
   const { papers, refreshPapers, go, setPaperId, analysisVersion } = useApp();
@@ -78,17 +79,15 @@ export default function Controls() {
         <div style={{ display: "grid", gap: 16, alignContent: "start" }}>
           <div className="card" style={{ display: "grid", gap: 12 }}>
             <div className="card-title" style={{ margin: 0 }}>Create a control</div>
-            <label className="field">Paper
-              <select className="select" style={{ maxWidth: "100%" }} value={paper} onChange={(e) => setTarget(e.target.value)}>
-                {curated.map((p) => <option key={p.paper_id} value={p.paper_id}>{p.title}</option>)}
-              </select>
-            </label>
-            <label className="field">Fault
-              <select className="select" style={{ maxWidth: "100%" }} value={fault} onChange={(e) => setFault(e.target.value)}>
-                <option value="random">Drawn at random (blind)</option>
-                {applicable.map((k) => <option key={k} value={k}>{k.replace(/_/g, " ")}</option>)}
-              </select>
-            </label>
+            <div className="field">Paper
+              <Select block label="Paper" value={paper} onChange={setTarget}
+                options={curated.map((p) => ({ value: p.paper_id, label: p.title, hint: p.repo_url?.replace("https://github.com/", "") }))} />
+            </div>
+            <div className="field">Fault
+              <Select block label="Fault" value={fault} onChange={setFault}
+                options={[{ value: "random", label: "Drawn at random", hint: "blind: the kind stays sealed until reveal" },
+                  ...applicable.map((k) => ({ value: k, label: k.replace(/_/g, " "), hint: "known kind, manifest still sealed" }))]} />
+            </div>
             <div className="row">
               <button className="btn primary" disabled={!applicable.length || !!jobId} onClick={() => act(() => api.plant(paper, fault))}>Plant fault</button>
               <button className="btn" disabled={!!jobId} onClick={() => act(() => api.clean(paper))}>Clean control</button>

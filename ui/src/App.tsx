@@ -110,7 +110,6 @@ export default function App() {
       if (p) setPaper(p);
       setClaimId(null);
       setTab(t);
-      window.scrollTo({ top: 0, behavior: "smooth" });
     },
     paperId,
     setPaperId: (id: string) => { setPaper(id); setClaimId(null); },
@@ -146,8 +145,8 @@ export default function App() {
           <div className="topbar-right"><ThemeToggle /></div>
         </div>
       </header>
-      {group.views.length > 1 && (
-        <div className="subnav-wrap">
+      {(
+        <div className={`subnav-wrap ${group.views.length > 1 ? "" : "is-empty"}`} aria-hidden={group.views.length > 1 ? undefined : true}>
           <nav className="subnav" role="tablist" aria-label={`${group.label} views`}>
             {group.views.map((v) => (
               <button key={v.id} role="tab" className="subnav-tab" aria-selected={tab === v.id} onClick={() => ctx.go(v.id)}>
@@ -158,14 +157,14 @@ export default function App() {
           </nav>
         </div>
       )}
-      <AnimatePresence mode="wait" initial={false}>
+      <AnimatePresence mode="wait" initial={false} onExitComplete={() => window.scrollTo({ top: 0 })}>
         <motion.main
           key={tab}
           className="page"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -6 }}
-          transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.18, ease: "easeOut" }}
         >
           <View />
         </motion.main>

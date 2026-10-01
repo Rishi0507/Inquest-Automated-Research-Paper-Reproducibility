@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { api, pdfPage, type Span } from "../api";
 import { VerdictChip, fmt, useApp, useAsync } from "../ui";
+import Select from "./Select";
 
 function CodeView({ paperId, refStr }: { paperId: string; refStr: string }) {
   const [path, lineStr] = refStr.split(":");
@@ -98,10 +99,10 @@ export default function EvidenceDrawer() {
                         <strong>Paper</strong>
                         <span className="muted">page {span?.page}{span?.table ? ` · ${span.table}` : ""}</span>
                         <span className="spacer" />
-                        <select className="select" style={{ fontSize: 12 }} value={span ? JSON.stringify(span) : ""} onChange={(e) => setSpan(JSON.parse(e.target.value))}>
-                          <option value={JSON.stringify(c.source)}>claimed value</option>
-                          {stated.map(([k, p]) => <option key={k} value={JSON.stringify(p.span)}>{k} = {String(p.value)}</option>)}
-                        </select>
+                        <Select size="small" label="Evidence on the page" value={span ? JSON.stringify(span) : null}
+                          onChange={(v) => setSpan(JSON.parse(v))} menuWidth={300}
+                          options={[{ value: JSON.stringify(c.source), label: "Claimed value", hint: `page ${c.source.page}${c.source.table ? ` · ${c.source.table}` : ""}` },
+                            ...stated.map(([k, p]) => ({ value: JSON.stringify(p.span), label: `${k} = ${String(p.value)}`, hint: `stated on page ${p.span.page}`, group: "Stated parameters" }))]} />
                       </div>
                       {span && (
                         <div className="pdf-frame">
@@ -120,9 +121,8 @@ export default function EvidenceDrawer() {
                         <strong>Code</strong>
                         <span className="spacer" />
                         {data!.code_refs.length > 0 && (
-                          <select className="select" style={{ fontSize: 12 }} value={codeRef ?? ""} onChange={(e) => setCodeRef(e.target.value)}>
-                            {data!.code_refs.map((r, i) => <option key={i} value={r.ref}>{r.ref} · {r.why}</option>)}
-                          </select>
+                          <Select size="small" label="Code location" value={codeRef} onChange={setCodeRef} menuWidth={340}
+                            options={data!.code_refs.map((r) => ({ value: r.ref, label: r.ref, hint: r.why }))} />
                         )}
                       </div>
                       {codeRef ? <CodeView paperId={paperId!} refStr={codeRef} /> : <div className="muted small">No code location recorded for this claim.</div>}
@@ -133,9 +133,8 @@ export default function EvidenceDrawer() {
                       <strong>Run log</strong>
                       <span className="spacer" />
                       {data!.runs.length > 1 && (
-                        <select className="select" style={{ fontSize: 12 }} value={run ?? ""} onChange={(e) => setRun(e.target.value)}>
-                          {data!.runs.map((r) => <option key={r} value={r}>run {r}</option>)}
-                        </select>
+                        <Select size="small" label="Run" value={run} onChange={setRun} menuWidth={220}
+                          options={data!.runs.map((r, i) => ({ value: r, label: `run ${r}`, hint: `baseline seed ${i}` }))} />
                       )}
                     </div>
                     {run ? <RunLog runId={run} /> : <div className="muted small">{info?.mapping?.status && info.mapping.status !== "mapped" ? `No run: ${info.mapping.reason}` : "No runs yet."}</div>}

@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { motion } from "motion/react";
 import type { Job, PaperSummary, Status } from "./api";
+import Select, { type Option } from "./components/Select";
 
 // ------------------------------------------------------------------ app context
 
@@ -153,13 +154,16 @@ export function PaperPicker({ filter }: { filter?: (p: PaperSummary) => boolean 
   const { papers, paperId, setPaperId } = useApp();
   const list = filter ? papers.filter(filter) : papers;
   if (!list.length) return null;
-  return (
-    <select className="select" value={paperId ?? ""} onChange={(e) => setPaperId(e.target.value)} aria-label="Paper">
-      {list.map((p) => (
-        <option key={p.paper_id} value={p.paper_id}>{p.parent ? `${p.title.replace(/\s*\[.*\]$/, "")} (control: ${p.paper_id.split("~")[1]})` : p.title}</option>
-      ))}
-    </select>
-  );
+  const order = { corpus: 0, registered: 1, variant: 2 } as Record<string, number>;
+  const groupName = { corpus: "Curated papers", registered: "Registered papers", variant: "Controls" } as Record<string, string>;
+  const options: Option[] = [...list]
+    .sort((a, b) => (order[a.source] ?? 3) - (order[b.source] ?? 3))
+    .map((p) => p.parent
+      ? { value: p.paper_id, group: groupName.variant, label: `${p.title.replace(/\s*\[.*\]$/, "")}`,
+          hint: `${p.variant_kind} control · ${p.paper_id.split("~")[1]}` }
+      : { value: p.paper_id, group: groupName[p.source] ?? p.source, label: p.title,
+          hint: [p.arxiv ? `arXiv ${p.arxiv}` : null, p.repo_url?.replace("https://github.com/", "")].filter(Boolean).join(" · ") });
+  return <Select value={paperId} options={options} onChange={setPaperId} label="Paper" menuWidth={380} />;
 }
 
 export const fmt = (x: number | null | undefined, d = 2) => (x === null || x === undefined || Number.isNaN(x) ? "n/a" : x.toFixed(d));
