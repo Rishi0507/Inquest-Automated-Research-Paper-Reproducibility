@@ -206,6 +206,26 @@ The engine evaluates rules in a fixed order and records the rule path.
 | 8 | `NOT_REPRODUCED_PARTIALLY_EXPLAINED` | Attribution explains at least 30% of the gap |
 | 9 | `NOT_REPRODUCED_UNEXPLAINED` | Otherwise |
 
+```mermaid
+flowchart TB
+    R1{"GRIM fails?"} -->|"yes"| V1["NUMERICALLY_IMPOSSIBLE"]
+    R1 -->|"no"| R2{"No code path<br/>produces the claim?"}
+    R2 -->|"yes"| V2["NOT_IMPLEMENTED"]
+    R2 -->|"no"| R3{"No experiment mapped, or<br/>SCI below 0.4 and not runnable?"}
+    R3 -->|"yes"| V3["UNVERIFIABLE"]
+    R3 -->|"no"| R4{"Every baseline<br/>run failed?"}
+    R4 -->|"yes"| V4["NOT_EXECUTABLE"]
+    R4 -->|"no"| R5{"Inside the baseline<br/>seed band?"}
+    R5 -->|"yes"| V5["REPRODUCED"]
+    R5 -->|"no"| R6{"Inside the aligned band<br/>after attribution?"}
+    R6 -->|"yes"| V6["NOT_REPRODUCED_EXPLAINED"]
+    R6 -->|"no"| R7{"Inside the<br/>specification band?"}
+    R7 -->|"yes"| V7["UNDERSPECIFIED"]
+    R7 -->|"no"| R8{"Attribution explains<br/>at least 30% of the gap?"}
+    R8 -->|"yes"| V8["NOT_REPRODUCED_PARTIALLY_EXPLAINED"]
+    R8 -->|"no"| V9["NOT_REPRODUCED_UNEXPLAINED"]
+```
+
 Flags: `NON_DETERMINISTIC`, `HASH_SEED_SENSITIVE`, `SELECTION_SIGNAL` (at least ten implied
 attempts on the aligned distribution when available), `PRUNED_JOINT_EFFECT`,
 `NON_TOGGLABLE_DEVIATIONS`, `WITNESS_PARTIAL`.
